@@ -1,0 +1,52 @@
+/* Theme tokens. Every component colors itself from these variables, so new
+   features automatically support both light and dark modes. */
+
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #eef1f7;
+  --text: #1a1f2b;
+  --muted: #5f6b7f;
+  --border: #e3e8f0;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --on-primary: #ffffff;
+
+  --gain: #089981;
+  --gain-bg: rgba(8, 153, 129, 0.12);
+  --loss: #f23645;
+  --loss-bg: rgba(242, 54, 69, 0.10);
+  --warn: #b45309;
+  --warn-bg: rgba(217, 119, 6, 0.12);
+  --neutral-bg: rgba(95, 107, 127, 0.12);
+
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.22);
+  --backdrop: rgba(16, 24, 40, 0.40);
+}
+
+[data-theme="dark"] {
+  --bg: #0e1117;
+  --surface: #161b24;
+  --surface-2: #1e2532;
+  --text: #e8ecf3;
+  --muted: #94a1b5;
+  --border: #28303e;
+
+  --primary: #3b82f6;
+  --primary-hover: #5b96f7;
+  --on-primary: #ffffff;
+
+  --gain: #0ecb81;
+  --gain-bg: rgba(14, 203, 129, 0.14);
+  --loss: #f6465d;
+  --loss-bg: rgba(246, 70, 93, 0.14);
+  --warn: #f59e0b;
+  --warn-bg: rgba(245, 158, 11, 0.14);
+  --neutral-bg: rgba(148, 161, 181, 0.16);
+
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --backdrop: rgba(0, 0, 0, 0.55);
+}

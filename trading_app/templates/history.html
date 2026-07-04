@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Transaction history</h1>
+<p class="page-sub">Every trade, deposit, and withdrawal on your account.</p>
+
+<div class="card">
+  <div class="filter-row">
+    <h2 style="margin:0; flex:1">Transactions</h2>
+    <select id="type-filter">
+      <option value="">All types</option>
+      <option value="buy">Buys</option>
+      <option value="sell">Sells</option>
+      <option value="deposit">Deposits</option>
+      <option value="withdraw">Withdrawals</option>
+    </select>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th class="num">Qty</th>
+        <th class="num">Price</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody id="txns-body">
+      <tr><td colspan="6" class="empty-note">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/history.js"></script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Positions</h1>
+<p class="page-sub">Your current holdings and unrealized profit / loss.</p>
+
+<div class="cards-row" id="summary-cards"></div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Company</th>
+        <th class="num">Qty</th>
+        <th class="num">Avg cost</th>
+        <th class="num">Price</th>
+        <th class="num">Market value</th>
+        <th class="num">P/L</th>
+        <th class="num"></th>
+      </tr>
+    </thead>
+    <tbody id="positions-body">
+      <tr><td colspan="8" class="empty-note">Loading positions…</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/positions.js"></script>
+{% endblock %}

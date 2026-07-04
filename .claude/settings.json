@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ccd_session_mgmt__search_session_transcripts",
+      "mcp__ccd_session_mgmt__list_sessions",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__robinhood-trading__get_portfolio",
+      "mcp__robinhood-trading__get_equity_positions",
+      "mcp__trading-server__search",
+      "mcp__trading-server__get_equity_quotes",
+      "mcp__trading-server__get_accounts",
+      "mcp__trading-server__get_portfolio",
+      "mcp__trading-server__get_equity_positions",
+      "mcp__trading-server__get_equity_orders"
+    ]
+  }
+}

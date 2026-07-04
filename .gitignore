@@ -1,0 +1,15 @@
+# Umbrella-level ignores. Each subproject keeps its own .gitignore too
+# (mcp_server/.gitignore, trading_app/.gitignore) — those still apply and cover
+# their .venv/, __pycache__/, and trading_app/data/ runtime state.
+
+# OS / editor cruft
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local git history backups (kept outside the repo; ignore if ever copied in)
+*.bundle

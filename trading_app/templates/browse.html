@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Browse stocks</h1>
+<p class="page-sub">Search any US-listed ticker or company name, then buy or sell.</p>
+
+<div class="search-wrap">
+  <input type="search" id="stock-search" placeholder="Search stocks — e.g. AAPL, Microsoft, Berkshire…" autocomplete="off">
+  <div class="search-results" id="search-results" hidden></div>
+</div>
+
+<div class="card">
+  <h2>Your watchlist</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="star-col"></th>
+        <th>Symbol</th>
+        <th>Company</th>
+        <th class="num">Price</th>
+        <th class="num">Today</th>
+        <th class="num"></th>
+      </tr>
+    </thead>
+    <tbody id="watchlist-body">
+      <tr><td colspan="6" class="empty-note">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Popular</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="star-col"></th>
+        <th>Symbol</th>
+        <th>Company</th>
+        <th class="num">Price</th>
+        <th class="num">Today</th>
+        <th class="num"></th>
+      </tr>
+    </thead>
+    <tbody id="popular-body">
+      <tr><td colspan="6" class="empty-note">Loading stocks…</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/browse.js"></script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Balances</h1>
+<p class="page-sub">Move money in and out of your account — transfers settle instantly.</p>
+
+<div class="cards-row" id="balance-cards"></div>
+
+<div class="transfer-forms">
+  <div class="card">
+    <h2>Deposit funds</h2>
+    <form id="deposit-form" autocomplete="off">
+      <label>Amount (USD)
+        <input type="number" id="deposit-amount" min="0.01" step="0.01" placeholder="0.00">
+      </label>
+      <div class="form-error" id="deposit-error" hidden></div>
+      <button type="submit" class="btn btn-primary">Deposit from bank</button>
+      <p class="muted" style="margin:12px 0 0; font-size:13px">
+        Fake bank — deposits are available immediately.
+      </p>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Withdraw funds</h2>
+    <form id="withdraw-form" autocomplete="off">
+      <label>Amount (USD)
+        <input type="number" id="withdraw-amount" min="0.01" step="0.01" placeholder="0.00">
+      </label>
+      <div class="form-error" id="withdraw-error" hidden></div>
+      <button type="submit" class="btn btn-ghost">Withdraw to bank</button>
+      <p class="muted" style="margin:12px 0 0; font-size:13px">
+        Up to your available cash (cash minus open limit-buy reservations).
+      </p>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Recent transfers</h2>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Type</th><th>Description</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody id="transfers-body">
+      <tr><td colspan="4" class="empty-note">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/balances.js"></script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ccd_session_mgmt__search_session_transcripts",
+      "mcp__ccd_session_mgmt__list_sessions",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__robinhood-trading__get_portfolio",
+      "mcp__robinhood-trading__get_equity_positions",
+      "mcp__beacon-trading-local__search",
+      "mcp__beacon-trading-local__get_equity_quotes",
+      "mcp__beacon-trading-local__get_accounts",
+      "mcp__beacon-trading-local__get_portfolio",
+      "mcp__beacon-trading-local__get_equity_positions",
+      "mcp__beacon-trading-local__get_equity_orders",
+      "mcp__beacon-trading-local__get_watchlist"
+    ]
+  }
+}

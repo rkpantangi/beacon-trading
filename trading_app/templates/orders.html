@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Orders</h1>
+<p class="page-sub">Working orders and your complete order history.</p>
+
+<div class="card">
+  <h2>Open orders</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Placed</th>
+        <th>Symbol</th>
+        <th>Side</th>
+        <th>Type</th>
+        <th class="num">Qty</th>
+        <th class="num">Limit</th>
+        <th class="num"></th>
+      </tr>
+    </thead>
+    <tbody id="open-orders-body">
+      <tr><td colspan="7" class="empty-note">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="filter-row">
+    <h2 style="margin:0; flex:1">All orders</h2>
+    <select id="status-filter">
+      <option value="">All statuses</option>
+      <option value="open">Open</option>
+      <option value="filled">Filled</option>
+      <option value="canceled">Canceled</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Placed</th>
+        <th>Symbol</th>
+        <th>Side</th>
+        <th>Type</th>
+        <th class="num">Qty</th>
+        <th class="num">Limit</th>
+        <th class="num">Fill price</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="all-orders-body">
+      <tr><td colspan="8" class="empty-note">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/orders.js"></script>
+{% endblock %}
