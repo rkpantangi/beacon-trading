@@ -1,6 +1,6 @@
 # Beacon Trading (trading app)
 
-Paper-trading Robinhood-style app: FastAPI + vanilla-JS UI, one fake
+Paper-trading app: FastAPI + vanilla-JS UI, one fake
 customer, delayed real market data. Overview and pages: README.md.
 
 ## Dev commands

@@ -1,6 +1,6 @@
 # Beacon Trading — paper-trading app
 
-A minimal Robinhood-style trading application for testing MCP integrations.
+A minimal trading application for testing MCP integrations.
 One customer, fake money, delayed public market data — but real order
 mechanics: market & limit orders, reservations, cancels, deposits and
 withdrawals.

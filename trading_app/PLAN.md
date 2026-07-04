@@ -5,7 +5,7 @@ intended. Companion doc on the MCP side: `../mcp_server/PLAN.md`.
 
 ## Goal
 
-A small, realistic Robinhood-style **paper-trading** brokerage whose REST API
+A small, realistic **paper-trading** brokerage whose REST API
 (`/api/*`) is the real product surface — a clean, documented HTTP contract that
 the sibling **MCP server** (`../mcp_server`) wraps as tools. The web UI is just
 another client of that API; nothing the UI can do bypasses it. The whole thing
