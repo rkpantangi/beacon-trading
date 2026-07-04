@@ -26,6 +26,8 @@ from beacon_trading_mcp.models import (
     Portfolio,
     Position,
     Quote,
+    Transaction,
+    TransferResponse,
     WatchlistItem,
 )
 
@@ -48,6 +50,9 @@ class TradingApiClient(Protocol):
     async def get_positions(self) -> list[Position]: ...
 
     async def get_orders(self, status: OrderStatus | None = None) -> list[Order]: ...
+
+    # --- transfers ---
+    async def transfer(self, transfer_type: str, amount: Decimal) -> TransferResponse: ...
 
     # --- watchlist ---
     async def get_watchlist(self) -> list[WatchlistItem]: ...

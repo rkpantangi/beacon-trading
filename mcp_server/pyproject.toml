@@ -1,7 +1,7 @@
 [project]
 name = "beacon-trading-mcp-server"
 version = "0.1.0"
-description = "MCP server exposing the Beacon Trading (Robinhood-style) trading API as MCP tools"
+description = "MCP server exposing the Beacon Trading API as MCP tools"
 requires-python = ">=3.12"
 dependencies = [
     "mcp>=1.2.0",

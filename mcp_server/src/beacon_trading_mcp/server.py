@@ -32,11 +32,13 @@ def build_server(
     mcp = FastMCP(
         "beacon-trading",
         instructions=(
-            "Trading tools for Beacon Trading, our Robinhood-style brokerage. "
+            "Trading tools for Beacon Trading, our modern brokerage. "
             "To trade: call review_equity_order first and show the user the "
             "estimated amount; if can_place is true, place_equity_order with the "
             "review_token. A placed order can still come back status='rejected' "
-            "with a reject_reason — always check and report the final status."
+            "with a reject_reason — always check and report the final status. "
+            "Always show the Order ID prominently to the user (e.g. in bold at the "
+            "start of the confirmation message) when returning order responses."
         ),
         host=settings.mcp_host,
         port=settings.mcp_port,

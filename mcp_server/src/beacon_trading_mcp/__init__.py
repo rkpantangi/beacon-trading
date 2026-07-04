@@ -1,1 +1,1 @@
-"""MCP server for Beacon Trading, our Robinhood-style trading application."""
+"""MCP server for Beacon Trading, our modern trading application."""

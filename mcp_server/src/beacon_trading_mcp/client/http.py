@@ -26,6 +26,8 @@ from beacon_trading_mcp.models import (
     Portfolio,
     Position,
     Quote,
+    Transaction,
+    TransferResponse,
     WatchlistItem,
 )
 
@@ -174,6 +176,15 @@ class HttpTradingApiClient:
             "POST", f"/api/orders/{order_id}/cancel", params=self._scoped()
         )
         return Order.model_validate(data.get("order", data))
+
+    async def transfer(self, transfer_type: str, amount: Decimal) -> TransferResponse:
+        data = await self._request(
+            "POST",
+            "/api/transfers",
+            params=self._scoped(),
+            json={"type": transfer_type, "amount": float(amount)},
+        )
+        return TransferResponse.model_validate(data)
 
     async def aclose(self) -> None:
         await self._http.aclose()

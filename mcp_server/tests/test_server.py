@@ -19,6 +19,8 @@ EXPECTED_TOOLS = {
     "get_watchlist",
     "add_to_watchlist",
     "remove_from_watchlist",
+    "deposit",
+    "withdraw",
 }
 
 # Tools that mutate state and are therefore not marked readOnlyHint.
@@ -27,6 +29,8 @@ MUTATING_TOOLS = {
     "cancel_equity_order",
     "add_to_watchlist",
     "remove_from_watchlist",
+    "deposit",
+    "withdraw",
 }
 
 
@@ -100,3 +104,22 @@ async def test_malformed_input_is_tool_error():
         )
         assert result.isError
         assert "Unknown symbol" in result.content[0].text
+
+
+async def test_transfers_over_mcp():
+    async with create_connected_server_and_client_session(
+        _fake_server()._mcp_server
+    ) as session:
+        # Deposit $5000
+        result = await session.call_tool("deposit", {"amount": "5000"})
+        assert not result.isError
+        payload = json.loads(result.content[0].text)
+        assert payload["transaction"]["type"] == "deposit"
+        assert float(payload["transaction"]["amount"]) == 5000.0
+
+        # Withdraw $2000
+        result = await session.call_tool("withdraw", {"amount": "2000"})
+        assert not result.isError
+        payload = json.loads(result.content[0].text)
+        assert payload["transaction"]["type"] == "withdraw"
+        assert float(payload["transaction"]["amount"]) == -2000.0

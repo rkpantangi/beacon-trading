@@ -31,6 +31,8 @@ from beacon_trading_mcp.models import (
     Portfolio,
     Position,
     Quote,
+    Transaction,
+    TransferResponse,
     WatchlistItem,
 )
 
@@ -425,3 +427,25 @@ class FakeTradingApiClient:
         order.canceled_at = now
         order.updated_at = now
         return order
+
+    async def transfer(self, transfer_type: str, amount: Decimal) -> TransferResponse:
+        if amount <= 0:
+            raise TradingApiError("Amount must be greater than zero")
+        if transfer_type == "deposit":
+            self._cash += amount
+        elif transfer_type == "withdraw":
+            if amount > self._buying_power():
+                raise TradingApiError("Insufficient buying power")
+            self._cash -= amount
+        else:
+            raise TradingApiError("Transfer type must be 'deposit' or 'withdraw'")
+
+        txn = Transaction(
+            id=f"txn-{uuid.uuid4().hex[:12]}",
+            account_id=_ACCOUNT_ID,
+            type=transfer_type,
+            amount=amount if transfer_type == "deposit" else -amount,
+            timestamp=_now(),
+            description=f"Fake {transfer_type} of ${amount}",
+        )
+        return TransferResponse(transaction=txn, account=self._account())

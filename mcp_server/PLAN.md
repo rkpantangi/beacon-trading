@@ -5,10 +5,10 @@ or on the trading API being built in the other session.
 
 ## Goal
 
-An MCP server that exposes our own Robinhood-style trading API as MCP tools, so
+An MCP server that exposes our own trading API as MCP tools, so
 any MCP client (Claude Code, Claude Desktop, Cursor, …) can query the market,
 view the portfolio, and place trades against **our** backend. No custom MCP
-client — like Robinhood's agentic trading, we ship the server and existing
+client — like general agentic trading platforms, we ship the server and existing
 agents bring their own client.
 
 End-state architecture:
@@ -78,7 +78,7 @@ as the test double.
 
 ### Tool surface (v1 target)
 
-Mirroring the Robinhood-style taxonomy (a real robinhood-trading MCP server's
+Mirroring standard brokerage taxonomy (a real brokerage-trading MCP server's
 tool list is our reference):
 
 - **Market data:** `search`, `get_equity_quotes`

@@ -76,7 +76,7 @@ class Account(BaseModel):
 
 class Portfolio(BaseModel):
     """Valuation snapshot. The API folds this into the account summary; this is
-    the Robinhood-style view of those fields."""
+    the flat view of those fields."""
 
     account_id: str
     total_value: Decimal
@@ -138,19 +138,37 @@ class OrderReview(BaseModel):
     refusals set can_place=false with a reason (not an error).
     """
 
-    symbol: str
-    side: OrderSide
-    qty: Decimal
-    order_type: OrderType
+    symbol: str | None = None
+    side: OrderSide | None = None
+    qty: Decimal | None = None
+    order_type: OrderType | None = None
     limit_price: Decimal | None = None
-    market_price: Decimal
-    estimated_price: Decimal
-    estimated_amount: Decimal
-    estimated_amount_label: str  # "cost" for buys, "credit" for sells
+    market_price: Decimal | None = None
+    estimated_price: Decimal | None = None
+    estimated_amount: Decimal | None = None
+    estimated_amount_label: str | None = None  # "cost" for buys, "credit" for sells
     buying_power: Decimal | None = None  # buy reviews
     shares_available: Decimal | None = None  # sell reviews
-    would_fill_immediately: bool
+    would_fill_immediately: bool | None = None
     can_place: bool
     reason: str | None = None
     review_token: str | None = None
     review_token_expires_in: int | None = None
+
+
+class Transaction(BaseModel):
+    id: str
+    account_id: str | None = None
+    type: str
+    amount: Decimal
+    timestamp: datetime | str
+    symbol: str | None = None
+    qty: Decimal | None = None
+    price: Decimal | None = None
+    order_id: str | None = None
+    description: str = ""
+
+
+class TransferResponse(BaseModel):
+    transaction: Transaction
+    account: Account
