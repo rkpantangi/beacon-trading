@@ -1,121 +1,147 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="agentic-header">
-  <h1>Agentic Trading</h1>
-  <p class="subtitle">Connect your AI coding assistants and IDEs directly to your Beacon Trading paper trading account.</p>
-</div>
+<div class="agentic-container">
+  <div class="agentic-header">
+    <h1>Agentic Trading</h1>
+    <p class="subtitle">Connect your favorite agentic development tool directly to your Beacon Trading paper trading account.</p>
+  </div>
 
-<div class="agentic-grid">
-  <!-- Left Column: Guide & Setup -->
-  <div class="agentic-guide-column">
-    <div class="card doc-card">
-      <h2>Model Context Protocol (MCP)</h2>
-      <p>
-        Beacon Trading supports the <strong>Model Context Protocol (MCP)</strong>, an open standard that allows AI models 
-        and coding assistants (like Google Antigravity, Claude Code, and Cursor) to securely access local or remote tools.
-      </p>
-      <p>
-        By connecting the Beacon Trading MCP server, your AI agent can:
-      </p>
-      <ul class="features-list">
-        <li>📊 <strong>Query Market Data</strong>: Get real-time stock quotes.</li>
-        <li>💼 <strong>Manage Portfolio</strong>: View your account balances and current holdings.</li>
-        <li>📈 <strong>Place Trades</strong>: Execute market buy and sell orders.</li>
-        <li>📝 <strong>Order Book</strong>: List, review, and cancel active limit or market orders.</li>
-      </ul>
-    </div>
+  <!-- Intro Card -->
+  <div class="card doc-card">
+    <h2>Model Context Protocol (MCP)</h2>
+    <p>
+      Beacon Trading supports the <strong>Model Context Protocol (MCP)</strong>, an open standard that allows AI models 
+      and coding assistants to securely access local or remote tools.
+    </p>
+    <p>
+      By connecting the Beacon Trading MCP server, your agent can query market data, manage your portfolio, and place trades against your account.
+    </p>
+    <ul class="features-list">
+      <li>📊 <strong>Query Market Data</strong>: Get real-time stock quotes.</li>
+      <li>💼 <strong>Manage Portfolio</strong>: View your account balances and current holdings.</li>
+      <li>📈 <strong>Place Trades</strong>: Execute market buy and sell orders.</li>
+      <li>📝 <strong>Order Book</strong>: List, review, and cancel active limit or market orders.</li>
+    </ul>
+  </div>
 
-    <div class="card doc-card">
-      <h2>1. Cloud Integration (Recommended)</h2>
-      <p>
-        Use this setup if you want to connect your local terminal or desktop agent to your cloud-hosted Fly.io trading engine.
-      </p>
-      
-      <div class="step-box">
-        <span class="step-num">Step A</span>
-        <p>Ensure your cloud MCP server is deployed and running. Run the following command in your terminal to add the server to your agent's config:</p>
+  <!-- Claude Setup Card -->
+  <div class="card doc-card">
+    <h2>Integrate with Claude (Code / Desktop)</h2>
+    <p>To add the Beacon Trading tools to Claude, run this command in your terminal:</p>
+    
+    <div class="code-block-wrapper">
+      <div class="code-header">
+        <span>Terminal Command</span>
+        <button class="btn btn-sm btn-copy" onclick="copyCommand('cloud-mcp-cmd')">Copy</button>
       </div>
-
-      <div class="code-block-wrapper">
-        <div class="code-header">
-          <span>Terminal Command</span>
-          <button class="btn btn-sm btn-copy" onclick="copyCommand('cloud-mcp-cmd')">Copy</button>
-        </div>
-        <pre><code id="cloud-mcp-cmd">claude mcp add --scope user --transport http beacon-trading https://agent-beacon-trading-paper.fly.dev/mcp</code></pre>
-      </div>
-
-      <div class="step-box" style="margin-top: 20px;">
-        <span class="step-num">Step B</span>
-        <p>Restart or reload your agent session to activate the tools. In the Antigravity TUI, type <code>/mcp</code> to refresh your connections.</p>
-      </div>
-    </div>
-
-    <div class="card doc-card">
-      <h2>2. Local Development Integration</h2>
-      <p>
-        If you are running the trading stack locally on your computer, you can configure your agent to spin up the local MCP server process directly via stdio.
-      </p>
-
-      <div class="code-block-wrapper">
-        <div class="code-header">
-          <span>Terminal Command (Local Stdio)</span>
-          <button class="btn btn-sm btn-copy" onclick="copyCommand('local-mcp-cmd')">Copy</button>
-        </div>
-        <pre><code id="local-mcp-cmd">claude mcp add --scope project --transport stdio beacon-trading-local -- uv run --directory ./mcp_server beacon-trading-mcp-server</code></pre>
-      </div>
-      <p class="muted-note" style="margin-top: 8px;">
-        Note: Replace <code>./mcp_server</code> with the absolute path to your local <code>mcp_server</code> folder if running outside the project root.
-      </p>
+      <pre><code id="cloud-mcp-cmd">claude mcp add --scope user --transport http beacon-trading https://agent-beacon-trading-paper.fly.dev/mcp</code></pre>
     </div>
   </div>
 
-  <!-- Right Column: API Reference & Status -->
-  <div class="agentic-status-column">
-    <div class="card status-card">
-      <h3>Connection Status</h3>
-      <div class="status-indicator">
-        <span class="status-dot online"></span>
-        <div>
-          <strong id="status-title">Web API Online</strong>
-          <p id="status-url" class="muted">Loading host…</p>
-        </div>
-      </div>
-      <div class="status-indicator" style="margin-top: 16px;">
-        <span class="status-dot online"></span>
-        <div>
-          <strong>MCP Server Endpoint</strong>
-          <p id="mcp-endpoint-url" class="muted">Loading endpoint…</p>
-        </div>
-      </div>
-    </div>
+  <!-- Antigravity Setup Card -->
+  <div class="card doc-card">
+    <h2>Integrate with Google Antigravity</h2>
+    <p>
+      To add the tools to Google Antigravity, add the server configuration to your global config file at 
+      <code>~/.gemini/config/mcp_config.json</code> (or locally in your workspace under <code>.agents/mcp_config.json</code>):
+    </p>
 
-    <div class="card status-card">
-      <h3>Available Tools</h3>
-      <div class="tools-grid">
-        <div class="tool-item">
-          <code>get_portfolio</code>
-          <p>Get account balance and equity summary.</p>
+    <div class="code-block-wrapper">
+      <div class="code-header">
+        <span>mcp_config.json Configuration</span>
+        <button class="btn btn-sm btn-copy" onclick="copyCommand('antigravity-config-cmd')">Copy JSON</button>
+      </div>
+      <pre><code id="antigravity-config-cmd">{
+  "mcpServers": {
+    "beacon-trading": {
+      "serverUrl": "https://agent-beacon-trading-paper.fly.dev/mcp"
+    }
+  }
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- Available Tools List -->
+  <div class="card doc-card">
+    <h2>Exposed Tools Reference</h2>
+    <p>Once connected, your agent will have access to the following functions grouped by category:</p>
+    
+    <div class="tools-vertical-list">
+      <!-- Category 1 -->
+      <div class="tool-category-section">
+        <h3 class="category-title">🔍 Market Data & Search</h3>
+        <div class="tool-desc-item">
+          <strong><code>get_equity_quotes</code></strong>
+          <p>Retrieve real-time price info, daily change, and volume details for stock symbols.</p>
         </div>
-        <div class="tool-item">
-          <code>get_equity_positions</code>
-          <p>List all current stock holdings.</p>
+        <div class="tool-desc-item">
+          <strong><code>search</code></strong>
+          <p>Search for stock instruments and metadata by ticker symbol or company name.</p>
         </div>
-        <div class="tool-item">
-          <code>get_equity_quotes</code>
-          <p>Retrieve real-time price info.</p>
+      </div>
+
+      <!-- Category 2 -->
+      <div class="tool-category-section" style="margin-top: 24px;">
+        <h3 class="category-title">💼 Portfolio & Positions</h3>
+        <div class="tool-desc-item">
+          <strong><code>get_portfolio</code></strong>
+          <p>Get account balance, total equity, buying power, and daily/unrealized profit & loss summary.</p>
         </div>
-        <div class="tool-item">
-          <code>review_equity_order</code>
-          <p>Preview order details and get confirmation token.</p>
+        <div class="tool-desc-item">
+          <strong><code>get_equity_positions</code></strong>
+          <p>List all current stock holdings, average entry price, total value, and unrealized gains/losses.</p>
         </div>
-        <div class="tool-item">
-          <code>place_equity_order</code>
-          <p>Submit and execute orders using token.</p>
+      </div>
+
+      <!-- Category 3 -->
+      <div class="tool-category-section" style="margin-top: 24px;">
+        <h3 class="category-title">📈 Order Management</h3>
+        <div class="tool-desc-item">
+          <strong><code>get_equity_orders</code></strong>
+          <p>Retrieve the log of all orders (open, filled, or canceled) with type, side, quantity, and status details.</p>
         </div>
-        <div class="tool-item">
-          <code>cancel_equity_order</code>
-          <p>Cancel active pending orders.</p>
+        <div class="tool-desc-item">
+          <strong><code>review_equity_order</code></strong>
+          <p>Submit order details for validation. Generates a preview and a 5-minute confirmation token.</p>
+        </div>
+        <div class="tool-desc-item">
+          <strong><code>place_equity_order</code></strong>
+          <p>Execute and place an order on the exchange using a valid order confirmation token.</p>
+        </div>
+        <div class="tool-desc-item">
+          <strong><code>cancel_equity_order</code></strong>
+          <p>Cancel an active, pending limit or stop order before it executes.</p>
+        </div>
+      </div>
+
+      <!-- Category 4 -->
+      <div class="tool-category-section" style="margin-top: 24px;">
+        <h3 class="category-title">⭐ Watchlist Management</h3>
+        <div class="tool-desc-item">
+          <strong><code>get_watchlist</code></strong>
+          <p>List the account's saved watchlist symbols, each combined with its current market quote.</p>
+        </div>
+        <div class="tool-desc-item">
+          <strong><code>add_to_watchlist</code></strong>
+          <p>Save a stock symbol to your account's watchlist.</p>
+        </div>
+        <div class="tool-desc-item">
+          <strong><code>remove_from_watchlist</code></strong>
+          <p>Remove a stock symbol from your account's watchlist.</p>
+        </div>
+      </div>
+
+      <!-- Category 5 -->
+      <div class="tool-category-section" style="margin-top: 24px;">
+        <h3 class="category-title">💵 Funding & Transfers</h3>
+        <div class="tool-desc-item">
+          <strong><code>deposit</code></strong>
+          <p>Deposit simulated cash funds into a trading account.</p>
+        </div>
+        <div class="tool-desc-item">
+          <strong><code>withdraw</code></strong>
+          <p>Withdraw simulated cash funds from a trading account.</p>
         </div>
       </div>
     </div>
@@ -139,21 +165,27 @@
       mcpUrl = origin.replace("https://", "https://agent-") + "/mcp";
     }
 
-    // Set status card texts
-    document.getElementById("status-url").textContent = origin;
-    document.getElementById("mcp-endpoint-url").textContent = mcpUrl;
-
-    // Set copyable command content
+    // Set copyable command content for Claude
     const cmd = `claude mcp add --scope user --transport http beacon-trading ${mcpUrl}`;
     document.getElementById("cloud-mcp-cmd").textContent = cmd;
+
+    // Set copyable JSON content for Antigravity
+    const jsonConfig = JSON.stringify({
+      mcpServers: {
+        "beacon-trading": {
+          serverUrl: mcpUrl
+        }
+      }
+    }, null, 2);
+    document.getElementById("antigravity-config-cmd").textContent = jsonConfig;
   })();
 
   function copyCommand(elemId) {
     const code = document.getElementById(elemId).textContent;
     navigator.clipboard.writeText(code).then(() => {
-      toast("Command copied to clipboard", "success");
+      toast("Copied to clipboard", "success");
     }).catch(err => {
-      toast("Failed to copy command: " + err, "error");
+      toast("Failed to copy: " + err, "error");
     });
   }
 </script>
