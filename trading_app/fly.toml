@@ -1,0 +1,19 @@
+# fly.toml app configuration file for deploying to Fly.io
+# Run 'fly launch' inside the trading_app directory to set up your app name.
+
+app = "beacon-trading-paper" # You will choose a unique name during launch
+primary_region = "bos"       # Boston region (choose your closest region during launch)
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[mounts]
+  source = "trading_data"
+  destination = "/app/data"
