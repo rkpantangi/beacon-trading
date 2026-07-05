@@ -353,7 +353,7 @@ Always return ONLY a raw JSON string. Do not wrap in backticks or markdown codeb
 
 
 def _call_gemini_api(message: str, api_key: str) -> Optional[dict]:
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [
@@ -451,7 +451,7 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                     order_type = "limit" if limit_price else "market"
                     order = svc.place_order(acct, symbol, action, qty, order_type, limit_price)
                     exec_action = "Bought" if action == "buy" else "Sold"
-                    executed_price = float(order.filled_price) if order.filled_price else (limit_price or 0.0)
+                    executed_price = float(order.fill_price) if order.fill_price is not None else (limit_price or 0.0)
 
                     if order.status == OrderStatus.FILLED:
                         status_msg = f"filled at **${executed_price:,.2f}**"
@@ -463,7 +463,7 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                             f"{initial_response}\n\n"
                             f"✅ **Trade Processed Successfully!**\n"
                             f"I have {exec_action.lower()} **{qty} shares** of **{symbol}** ({entry['name']}) {status_msg}.\n"
-                            f"* **Order ID**: `{order.order_id}`\n"
+                            f"* **Order ID**: `{order.id}`\n"
                             f"* **Order Type**: {order_type.upper()}\n"
                             f"* **Status**: {order.status.capitalize()}"
                         )
