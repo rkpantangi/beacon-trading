@@ -1,5 +1,5 @@
-# fly.toml app configuration file for deploying to Fly.io
-# Run 'fly launch' inside the trading_app directory to set up your app name.
+# fly.toml app configuration file for deploying to Fly.io from root
+# Run 'fly launch' inside the root directory to set up your app name.
 
 app = "beacon-trading-paper" # You will choose a unique name during launch
 primary_region = "bos"       # Boston region (choose your closest region during launch)
@@ -16,4 +16,4 @@ primary_region = "bos"       # Boston region (choose your closest region during 
 
 [mounts]
   source = "trading_data"
-  destination = "/app/data"
+  destination = "/app/trading_app/data"

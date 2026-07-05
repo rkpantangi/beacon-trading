@@ -1,0 +1,11 @@
+.venv/
+mcp_server/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.git/
+.gitignore
+trading_app/data/
+Dockerfile
+fly.toml
