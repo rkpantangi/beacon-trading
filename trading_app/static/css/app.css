@@ -127,13 +127,14 @@ td.num, th.num { text-align: right !important; font-variant-numeric: tabular-num
 .col-price { width: 110px; }
 .col-today { width: 100px; }
 .col-actions { width: 150px; }
-.col-placed { width: 180px; }
-.col-side { width: 80px; }
-.col-type { width: 80px; }
-.col-qty { width: 80px; }
-.col-limit { width: 100px; }
-.col-fill-price { width: 100px; }
+.col-placed { width: 220px; }
+.col-side { width: 100px; }
+.col-type { width: 100px; }
+.col-qty { width: 100px; }
+.col-limit { width: 120px; }
+.col-fill-price { width: 120px; }
 .col-status { width: auto; }
+.orders-table .col-symbol { width: 120px; }
 .orders-table .col-actions { width: auto; }
 .gain { color: var(--gain); }
 .loss { color: var(--loss); }
@@ -345,7 +346,7 @@ input:focus, select:focus { border-color: var(--primary); }
 /* ---- misc ------------------------------------------------------------------- */
 
 .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-.filter-row select { width: auto; margin-top: 0; }
+.filter-row select, .filter-row input { width: auto; margin-top: 0; }
 .transfer-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 720px) {
   .topbar { gap: 10px; padding: 0 12px; overflow-x: auto; }

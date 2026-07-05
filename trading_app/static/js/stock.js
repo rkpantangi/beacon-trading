@@ -108,6 +108,55 @@
       const labels = dataPoints.map(d => formatChartLabel(d.timestamp, range));
       const prices = dataPoints.map(d => d.close);
 
+      // Fetch completed orders for this symbol to display on the chart
+      let orders = [];
+      try {
+        const ordersRes = await API.get(`/api/orders?status=filled&symbol=${encodeURIComponent(symbol)}`);
+        orders = ordersRes.orders || [];
+      } catch (err) {
+        console.error("Failed to load orders for chart:", err);
+      }
+
+      const buysData = new Array(dataPoints.length).fill(null);
+      const sellsData = new Array(dataPoints.length).fill(null);
+      const buysOrders = Array.from({ length: dataPoints.length }, () => []);
+      const sellsOrders = Array.from({ length: dataPoints.length }, () => []);
+
+      if (orders.length > 0 && dataPoints.length > 0) {
+        const startSec = dataPoints[0].timestamp;
+        const endSec = dataPoints[dataPoints.length - 1].timestamp;
+
+        for (const o of orders) {
+          const orderTimeMs = Date.parse(o.filled_at || o.created_at);
+          if (isNaN(orderTimeMs)) continue;
+          const orderTimeSec = orderTimeMs / 1000;
+
+          // Align orders with a weekend/holiday buffer window (4 days)
+          if (orderTimeSec >= startSec - 345600 && orderTimeSec <= endSec + 345600) {
+            let closestIdx = -1;
+            let minDiff = Infinity;
+            for (let i = 0; i < dataPoints.length; i++) {
+              const diff = Math.abs(dataPoints[i].timestamp - orderTimeSec);
+              if (diff < minDiff) {
+                minDiff = diff;
+                closestIdx = i;
+              }
+            }
+
+            if (closestIdx !== -1) {
+              const price = o.fill_price || o.limit_price || dataPoints[closestIdx].close;
+              if (o.side === "buy") {
+                buysData[closestIdx] = price;
+                buysOrders[closestIdx].push(o);
+              } else {
+                sellsData[closestIdx] = price;
+                sellsOrders[closestIdx].push(o);
+              }
+            }
+          }
+        }
+      }
+
       // Determine if net positive or negative
       const firstPrice = prices[0];
       const lastPrice = prices[prices.length - 1];
@@ -124,12 +173,10 @@
 
       const ctx = document.getElementById("stock-chart").getContext("2d");
       
-      // Destroy existing chart if it exists
       if (chartInstance) {
         chartInstance.destroy();
       }
 
-      // Create gradient fill
       const gradient = ctx.createLinearGradient(0, 0, 0, 280);
       if (isUp) {
         gradient.addColorStop(0, 'rgba(8, 203, 129, 0.16)');
@@ -143,19 +190,50 @@
         type: "line",
         data: {
           labels: labels,
-          datasets: [{
-            data: prices,
-            borderColor: activeColor,
-            borderWidth: 2.5,
-            fill: true,
-            backgroundColor: gradient,
-            pointRadius: 0,
-            pointHoverRadius: 5,
-            pointHoverBackgroundColor: activeColor,
-            pointHoverBorderColor: "#ffffff",
-            pointHoverBorderWidth: 1.5,
-            tension: 0.1
-          }]
+          datasets: [
+            {
+              label: "Price",
+              data: prices,
+              borderColor: activeColor,
+              borderWidth: 2.5,
+              fill: true,
+              backgroundColor: gradient,
+              pointRadius: 0,
+              pointHoverRadius: 5,
+              pointHoverBackgroundColor: activeColor,
+              pointHoverBorderColor: "#ffffff",
+              pointHoverBorderWidth: 1.5,
+              tension: 0.1
+            },
+            {
+              label: "Buys",
+              data: buysData,
+              borderColor: "transparent",
+              backgroundColor: gainColor,
+              pointStyle: "circle",
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: gainColor,
+              pointBorderColor: "#ffffff",
+              pointBorderWidth: 1.5,
+              showLine: false,
+              fill: false
+            },
+            {
+              label: "Sells",
+              data: sellsData,
+              borderColor: "transparent",
+              backgroundColor: lossColor,
+              pointStyle: "circle",
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: lossColor,
+              pointBorderColor: "#ffffff",
+              pointBorderWidth: 1.5,
+              showLine: false,
+              fill: false
+            }
+          ]
         },
         options: {
           responsive: true,
@@ -177,7 +255,28 @@
               displayColors: false,
               callbacks: {
                 label: function(context) {
-                  return fmtMoney(context.parsed.y);
+                  const datasetIdx = context.datasetIndex;
+                  const idx = context.dataIndex;
+                  if (datasetIdx === 0) {
+                    return `Price: ${fmtMoney(context.parsed.y)}`;
+                  } else if (datasetIdx === 1) {
+                    const list = buysOrders[idx];
+                    if (list && list.length > 0) {
+                      return list.map(o => {
+                        const p = o.fill_price || o.limit_price;
+                        return `🟢 Bought ${fmtQty(o.qty)} sh. @ ${fmtMoney(p)}`;
+                      });
+                    }
+                  } else if (datasetIdx === 2) {
+                    const list = sellsOrders[idx];
+                    if (list && list.length > 0) {
+                      return list.map(o => {
+                        const p = o.fill_price || o.limit_price;
+                        return `🔴 Sold ${fmtQty(o.qty)} sh. @ ${fmtMoney(p)}`;
+                      });
+                    }
+                  }
+                  return null;
                 }
               }
             }

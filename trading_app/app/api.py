@@ -275,7 +275,7 @@ def transfer(request: Request, body: TransferRequest, account_id: Optional[str] 
 
 @router.get("/orders")
 def get_orders(request: Request, account_id: Optional[str] = None,
-               status: Optional[str] = None):
+               status: Optional[str] = None, symbol: Optional[str] = None):
     svc = _svc(request)
     acct = _acct(account_id)
     if status and status not in OrderStatus.ALL:
@@ -284,6 +284,9 @@ def get_orders(request: Request, account_id: Optional[str] = None,
         orders = svc.store.orders.list_open(acct)  # fast path
     else:
         orders = svc.store.orders.list(acct, status=status)
+    if symbol:
+        symbol = symbol.upper()
+        orders = [o for o in orders if o.symbol == symbol]
     return {"orders": [o.to_dict() for o in orders]}
 
 

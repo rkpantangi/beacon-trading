@@ -4,6 +4,7 @@
   const openBody = document.getElementById("open-orders-body");
   const allBody = document.getElementById("all-orders-body");
   const statusFilter = document.getElementById("status-filter");
+  const symbolFilter = document.getElementById("symbol-filter");
 
   function sideChip(side) {
     return `<span class="chip ${side === "buy" ? "buy" : "sell"}">${esc(side)}</span>`;
@@ -35,8 +36,13 @@
 
   async function loadAll() {
     const status = statusFilter.value;
+    const symbol = symbolFilter.value.trim().toUpperCase();
     try {
-      const { orders } = await API.get(`/api/orders${status ? `?status=${status}` : ""}`);
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      if (symbol) params.set("symbol", symbol);
+      const url = `/api/orders${params.toString() ? "?" + params.toString() : ""}`;
+      const { orders } = await API.get(url);
       if (!orders.length) {
         allBody.innerHTML = `<tr><td colspan="8" class="empty-note">No orders yet.</td></tr>`;
         return;
@@ -73,6 +79,7 @@
 
   function reload() { loadOpen(); loadAll(); }
   statusFilter.addEventListener("change", loadAll);
+  symbolFilter.addEventListener("input", loadAll);
   document.addEventListener("portfolio:changed", reload);
   reload();
   setInterval(reload, 30000); // pick up background limit-order fills
