@@ -338,16 +338,19 @@ class ChatRequest(BaseModel):
 GEMINI_SYSTEM_PROMPT = """You are the AI trading assistant for Beacon Trading.
 Analyze the user's message and determine the appropriate action to take.
 You must respond with a single valid JSON object containing exactly these fields:
-1. "action": one of "balance", "positions", "buy", "sell", or "none"
-2. "symbol": the ticker symbol (in uppercase) if user wants to buy/sell, else null
+1. "action": one of "balance", "positions", "buy", "sell", "search", "orders_list", "cancel_order", "watchlist_view", "watchlist_add", "watchlist_remove", "deposit", "withdraw", or "none"
+2. "symbol": the ticker symbol (in uppercase, e.g. "AAPL") if applicable, else null
 3. "qty": the integer quantity to buy/sell, else null
 4. "limit_price": the float limit price if specified, else null
-5. "response": a friendly conversational response to show the user (e.g. "Checking your balance..." or answering general questions)
+5. "query": the search query string if searching, else null
+6. "order_id": the order ID string (e.g. "ord-abc") if canceling an order, else null
+7. "amount": the float dollar amount for deposit/withdrawal, else null
+8. "response": a friendly conversational response to show the user (e.g. "Checking your balance..." or answering general questions)
 
 Example mapping:
-- "what is my balance?" -> {"action": "balance", "symbol": null, "qty": null, "limit_price": null, "response": "Sure, checking your account balance now..."}
-- "buy 10 AAPL at 150" -> {"action": "buy", "symbol": "AAPL", "qty": 10, "limit_price": 150.0, "response": "Let me place that limit order for you..."}
-- "how are you today?" -> {"action": "none", "symbol": null, "qty": null, "limit_price": null, "response": "I'm doing great, thank you! How can I help you trade today?"}
+- "what is my balance?" -> {"action": "balance", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Sure, checking your account balance now..."}
+- "buy 10 AAPL at 150" -> {"action": "buy", "symbol": "AAPL", "qty": 10, "limit_price": 150.0, "query": null, "order_id": null, "amount": null, "response": "Let me place that limit order for you..."}
+- "search for Microsoft" -> {"action": "search", "symbol": null, "qty": null, "limit_price": null, "query": "Microsoft", "order_id": null, "amount": null, "response": "Searching catalog for Microsoft..."}
 
 Always return ONLY a raw JSON string. Do not wrap in backticks or markdown codeblocks."""
 
@@ -396,8 +399,12 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
             symbol = llm_res.get("symbol")
             qty = llm_res.get("qty")
             limit_price = llm_res.get("limit_price")
+            query = llm_res.get("query")
+            order_id = llm_res.get("order_id")
+            amount = llm_res.get("amount")
             initial_response = llm_res.get("response", "")
 
+            # 1. Check Balances
             if action == "balance":
                 try:
                     portfolio = svc.account_summary(acct)
@@ -417,6 +424,7 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                 except Exception as e:
                     return {"response": f"Failed to retrieve balance details: {str(e)}"}
 
+            # 2. Check Positions
             elif action == "positions":
                 try:
                     positions = svc.positions_with_prices(acct)
@@ -434,6 +442,7 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                 except Exception as e:
                     return {"response": f"Failed to retrieve positions: {str(e)}"}
 
+            # 3. Buy / Sell Trade Execution
             elif action in ["buy", "sell"] and symbol and qty:
                 try:
                     qty = int(qty)
@@ -472,6 +481,89 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                     return {"response": f"❌ **Trade Failed**: {str(e)}"}
                 except Exception as e:
                     return {"response": f"❌ **Error executing trade**: {str(e)}"}
+
+            # 4. Search Catalog
+            elif action == "search" and query:
+                results = svc.catalog.search(query, limit=5)
+                if not results:
+                    return {"response": f"No stocks found matching '{query}'."}
+                res = f"🔍 **Search Results for '{query}'**:\n"
+                for r in results:
+                    res += f"* **{r['symbol']}**: {r['name']} ({r['exchange']})\n"
+                return {"response": res}
+
+            # 5. Orders List
+            elif action == "orders_list":
+                orders = svc.store.orders.list(acct)
+                if not orders:
+                    return {"response": "You have no active or historical orders."}
+                res = "📝 **Your Recent Orders**:\n"
+                for o in orders[-10:]:  # Last 10 orders
+                    price_str = f"at ${o.limit_price:,.2f}" if o.limit_price else "at market price"
+                    res += f"* **{o.side.upper()} {o.qty} {o.symbol}** {price_str} | Status: **{o.status.capitalize()}** (ID: `{o.id}`)\n"
+                return {"response": res}
+
+            # 6. Cancel Order
+            elif action == "cancel_order" and order_id:
+                try:
+                    order = svc.cancel_order(acct, order_id)
+                    return {
+                        "response": (
+                            f"✅ **Order Canceled Successfully!**\n"
+                            f"Canceled order `{order.id}` (**{order.side.upper()} {order.qty} {order.symbol}**)."
+                        )
+                    }
+                except Exception as e:
+                    return {"response": f"❌ **Failed to cancel order**: {str(e)}"}
+
+            # 7. Watchlist View
+            elif action == "watchlist_view":
+                watchlist = svc.store.watchlists.list(acct)
+                if not watchlist:
+                    return {"response": "Your watchlist is currently empty."}
+                quotes = svc.prices.get_quotes(watchlist)
+                res = "⭐ **Your Watchlist**:\n"
+                for sym in watchlist:
+                    q = quotes.get(sym)
+                    price_str = f"${q.price:,.2f}" if q else "N/A"
+                    res += f"* **{sym}**: {price_str}\n"
+                return {"response": res}
+
+            # 8. Watchlist Add
+            elif action == "watchlist_add" and symbol:
+                symbol = symbol.upper()
+                entry = svc.catalog.get(symbol)
+                if not entry:
+                    search_res = svc.catalog.search(symbol, limit=1)
+                    if search_res:
+                        symbol = search_res[0]["symbol"]
+                        entry = svc.catalog.get(symbol)
+                if not entry:
+                    return {"response": f"Symbol '{symbol}' was not found in the catalog."}
+                svc.store.watchlists.add(acct, symbol)
+                return {"response": f"✅ Added **{symbol}** ({entry['name']}) to your watchlist."}
+
+            # 9. Watchlist Remove
+            elif action == "watchlist_remove" and symbol:
+                symbol = symbol.upper()
+                svc.store.watchlists.remove(acct, symbol)
+                return {"response": f"❌ Removed **{symbol}** from your watchlist."}
+
+            # 10. Deposit Funding
+            elif action == "deposit" and amount:
+                try:
+                    txn = svc.deposit(acct, amount)
+                    return {"response": f"💰 **Deposit Successful!**\nAdded **${amount:,.2f}** to your buying power (Transaction ID: `{txn.id}`)."}
+                except Exception as e:
+                    return {"response": f"❌ **Deposit Failed**: {str(e)}"}
+
+            # 11. Withdraw Funding
+            elif action == "withdraw" and amount:
+                try:
+                    txn = svc.withdraw(acct, amount)
+                    return {"response": f"💸 **Withdrawal Successful!**\nWithdrew **${amount:,.2f}** from your buying power (Transaction ID: `{txn.id}`)."}
+                except Exception as e:
+                    return {"response": f"❌ **Withdrawal Failed**: {str(e)}"}
 
             else:
                 return {"response": initial_response}
