@@ -498,16 +498,29 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                     exec_action = "Bought" if action == "buy" else "Sold"
                     executed_price = float(order.fill_price) if order.fill_price is not None else (limit_price or 0.0)
 
+                    is_rejected = (order.status == OrderStatus.REJECTED)
+                    icon = "❌" if is_rejected else "✅"
+                    title = "Trade Rejected!" if is_rejected else "Trade Processed Successfully!"
+
                     if order.status == OrderStatus.FILLED:
                         status_msg = f"filled at **${executed_price:,.2f}**"
+                    elif is_rejected:
+                        status_msg = f"rejected (Reason: *{order.reject_reason}*)" if order.reject_reason else "rejected"
                     else:
                         status_msg = "placed as pending"
 
+                    response_text = (
+                        f"{initial_response}\n\n"
+                        f"{icon} **{title}**\n"
+                        f"I tried to {action} **{qty} shares** of **{symbol}** ({entry['name']}) but it was {status_msg}.\n"
+                        if is_rejected else
+                        f"{initial_response}\n\n"
+                        f"{icon} **{title}**\n"
+                        f"I have {exec_action.lower()} **{qty} shares** of **{symbol}** ({entry['name']}) {status_msg}.\n"
+                    )
+
                     return {
-                        "response": (
-                            f"{initial_response}\n\n"
-                            f"✅ **Trade Processed Successfully!**\n"
-                            f"I have {exec_action.lower()} **{qty} shares** of **{symbol}** ({entry['name']}) {status_msg}.\n"
+                        "response": response_text + (
                             f"* **Order ID**: `{order.id}`\n"
                             f"* **Order Type**: {order_type.upper()}\n"
                             f"* **Status**: {order.status.capitalize()}"
@@ -580,7 +593,10 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                 
                 for o in orders[-10:]:  # Last 10 orders
                     price_str = f"at ${o.limit_price:,.2f}" if o.limit_price else "at market price"
-                    res += f"* **{o.side.upper()} {o.qty} {o.symbol}** {price_str} | Status: **{o.status.capitalize()}** (ID: `{o.id}`)\n"
+                    status_str = f"**{o.status.capitalize()}**"
+                    if o.status == "rejected" and o.reject_reason:
+                        status_str += f" (Reason: *{o.reject_reason}*)"
+                    res += f"* **{o.side.upper()} {o.qty} {o.symbol}** {price_str} | Status: {status_str} (ID: `{o.id}`)\n"
                 return {"response": res}
 
             # 6. Cancel Order
