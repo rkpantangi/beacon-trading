@@ -1,7 +1,7 @@
 # fly.mcp.toml app configuration file for deploying the MCP server to Fly.io
 # Run 'fly launch --config fly.mcp.toml' to set up this second app.
 
-app = "agent-beacon-trading"   # You will choose a unique name during launch
+app = "agent-beacon-trading-paper"   # You will choose a unique name during launch
 primary_region = "bos"       # Match the region of your trading app
 
 [build]
