@@ -10,17 +10,30 @@
 
   if (!els.toggle || !els.window) return;
 
-  // Toggle Chat Window
-  els.toggle.addEventListener("click", () => {
-    els.window.hidden = !els.window.hidden;
-    if (!els.window.hidden) {
-      els.input.focus();
+  // Restore state on load
+  const isOpen = localStorage.getItem("chat-open") === "true";
+  if (isOpen) {
+    document.body.classList.add("chat-open");
+    // Wait a brief tick for the window transition to complete and then scroll
+    setTimeout(() => {
       els.messages.scrollTop = els.messages.scrollHeight;
-    }
+    }, 100);
+  }
+
+  // Toggle Chat Window Open (Expand)
+  els.toggle.addEventListener("click", () => {
+    document.body.classList.add("chat-open");
+    localStorage.setItem("chat-open", "true");
+    els.input.focus();
+    setTimeout(() => {
+      els.messages.scrollTop = els.messages.scrollHeight;
+    }, 100);
   });
 
+  // Minimize Chat Window (Collapse)
   els.close.addEventListener("click", () => {
-    els.window.hidden = true;
+    document.body.classList.remove("chat-open");
+    localStorage.setItem("chat-open", "false");
   });
 
   // Basic Markdown Formatter for chat bubbles
