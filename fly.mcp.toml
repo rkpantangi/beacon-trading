@@ -1,0 +1,21 @@
+# fly.mcp.toml app configuration file for deploying the MCP server to Fly.io
+# Run 'fly launch --config fly.mcp.toml' to set up this second app.
+
+app = "beacon-trading-mcp"   # You will choose a unique name during launch
+primary_region = "bos"       # Match the region of your trading app
+
+[build]
+  dockerfile = "Dockerfile.mcp"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[env]
+  # Update this with the actual URL of your live public trading app (e.g., https://xxx.fly.dev)
+  # You can also change this anytime using: fly secrets set TRADING_API_BASE_URL=https://...
+  TRADING_API_BASE_URL = "https://beacon-trading-paper.fly.dev"
