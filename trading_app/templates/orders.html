@@ -6,16 +6,16 @@
 
 <div class="card">
   <h2>Open orders</h2>
-  <table>
+  <table class="orders-table">
     <thead>
       <tr>
-        <th>Placed</th>
-        <th>Symbol</th>
-        <th>Side</th>
-        <th>Type</th>
-        <th class="num">Qty</th>
-        <th class="num">Limit</th>
-        <th class="num"></th>
+        <th class="col-placed">Placed</th>
+        <th class="col-symbol">Symbol</th>
+        <th class="col-side">Side</th>
+        <th class="col-type">Type</th>
+        <th class="num col-qty">Qty</th>
+        <th class="num col-limit">Limit</th>
+        <th class="num col-actions"></th>
       </tr>
     </thead>
     <tbody id="open-orders-body">
@@ -35,17 +35,17 @@
       <option value="rejected">Rejected</option>
     </select>
   </div>
-  <table>
+  <table class="orders-table">
     <thead>
       <tr>
-        <th>Placed</th>
-        <th>Symbol</th>
-        <th>Side</th>
-        <th>Type</th>
-        <th class="num">Qty</th>
-        <th class="num">Limit</th>
-        <th class="num">Fill price</th>
-        <th>Status</th>
+        <th class="col-placed">Placed</th>
+        <th class="col-symbol">Symbol</th>
+        <th class="col-side">Side</th>
+        <th class="col-type">Type</th>
+        <th class="num col-qty">Qty</th>
+        <th class="num col-limit">Limit</th>
+        <th class="num col-fill-price">Fill price</th>
+        <th class="col-status">Status</th>
       </tr>
     </thead>
     <tbody id="all-orders-body">

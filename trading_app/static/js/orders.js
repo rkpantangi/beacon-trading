@@ -18,13 +18,13 @@
       }
       openBody.innerHTML = orders.map((o) => `
         <tr>
-          <td class="muted">${fmtDate(o.created_at)}</td>
-          <td class="sym">${esc(o.symbol)}</td>
-          <td>${sideChip(o.side)}</td>
-          <td>${esc(o.order_type)}</td>
-          <td class="num">${fmtQty(o.qty)}</td>
-          <td class="num">${fmtMoney(o.limit_price)}</td>
-          <td class="num">
+          <td class="col-placed muted">${fmtDate(o.created_at)}</td>
+          <td class="sym col-symbol">${esc(o.symbol)}</td>
+          <td class="col-side">${sideChip(o.side)}</td>
+          <td class="col-type">${esc(o.order_type)}</td>
+          <td class="num col-qty">${fmtQty(o.qty)}</td>
+          <td class="num col-limit">${fmtMoney(o.limit_price)}</td>
+          <td class="num col-actions">
             <button class="btn btn-ghost btn-sm" data-cancel="${esc(o.id)}">Cancel</button>
           </td>
         </tr>`).join("");
@@ -43,14 +43,14 @@
       }
       allBody.innerHTML = orders.map((o) => `
         <tr title="${o.status === "rejected" ? esc(o.reject_reason || "") : ""}">
-          <td class="muted">${fmtDate(o.created_at)}</td>
-          <td class="sym">${esc(o.symbol)}</td>
-          <td>${sideChip(o.side)}</td>
-          <td>${esc(o.order_type)}</td>
-          <td class="num">${fmtQty(o.qty)}</td>
-          <td class="num">${fmtMoney(o.limit_price)}</td>
-          <td class="num">${fmtMoney(o.fill_price)}</td>
-          <td><span class="chip ${esc(o.status)}">${esc(o.status)}</span></td>
+          <td class="col-placed muted">${fmtDate(o.created_at)}</td>
+          <td class="sym col-symbol">${esc(o.symbol)}</td>
+          <td class="col-side">${sideChip(o.side)}</td>
+          <td class="col-type">${esc(o.order_type)}</td>
+          <td class="num col-qty">${fmtQty(o.qty)}</td>
+          <td class="num col-limit">${fmtMoney(o.limit_price)}</td>
+          <td class="num col-fill-price">${fmtMoney(o.fill_price)}</td>
+          <td class="col-status"><span class="chip ${esc(o.status)}">${esc(o.status)}</span></td>
         </tr>`).join("");
     } catch (e) {
       allBody.innerHTML = `<tr><td colspan="8" class="empty-note">Failed to load: ${esc(e.message)}</td></tr>`;

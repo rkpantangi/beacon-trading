@@ -114,6 +114,7 @@ a { color: var(--primary); text-decoration: none; }
 /* ---- tables ------------------------------------------------------------- */
 
 table { width: 100%; border-collapse: collapse; }
+.orders-table { table-layout: fixed; }
 th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); }
 th { text-align: left !important; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
 tbody tr:last-child td { border-bottom: none; }
@@ -126,6 +127,14 @@ td.num, th.num { text-align: right !important; font-variant-numeric: tabular-num
 .col-price { width: 110px; }
 .col-today { width: 100px; }
 .col-actions { width: 150px; }
+.col-placed { width: 180px; }
+.col-side { width: 80px; }
+.col-type { width: 80px; }
+.col-qty { width: 80px; }
+.col-limit { width: 100px; }
+.col-fill-price { width: 100px; }
+.col-status { width: auto; }
+.orders-table .col-actions { width: auto; }
 .gain { color: var(--gain); }
 .loss { color: var(--loss); }
 .empty-note { text-align: center; color: var(--muted); padding: 28px 0; }
