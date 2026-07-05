@@ -66,6 +66,7 @@ PAGES = {
     "/orders": ("orders.html", "Orders"),
     "/history": ("history.html", "History"),
     "/balances": ("balances.html", "Balances"),
+    "/agentic": ("agentic.html", "Agentic Trading"),
 }
 
 
@@ -100,8 +101,14 @@ def page_balances(request: Request):
     return _page(request, "/balances")
 
 
+@app.get("/agentic", response_class=HTMLResponse)
+def page_agentic(request: Request):
+    return _page(request, "/agentic")
+
+
 @app.get("/stock/{symbol}", response_class=HTMLResponse)
 def page_stock_details(request: Request, symbol: str):
     return templates.TemplateResponse(
         request, "stock.html", {"title": f"{symbol.upper()} Details", "active": "/", "symbol": symbol.upper()})
+
 

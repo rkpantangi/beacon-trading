@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="agentic-header">
+  <h1>Agentic Trading</h1>
+  <p class="subtitle">Connect your AI coding assistants and IDEs directly to your Beacon Trading paper trading account.</p>
+</div>
+
+<div class="agentic-grid">
+  <!-- Left Column: Guide & Setup -->
+  <div class="agentic-guide-column">
+    <div class="card doc-card">
+      <h2>Model Context Protocol (MCP)</h2>
+      <p>
+        Beacon Trading supports the <strong>Model Context Protocol (MCP)</strong>, an open standard that allows AI models 
+        and coding assistants (like Google Antigravity, Claude Code, and Cursor) to securely access local or remote tools.
+      </p>
+      <p>
+        By connecting the Beacon Trading MCP server, your AI agent can:
+      </p>
+      <ul class="features-list">
+        <li>📊 <strong>Query Market Data</strong>: Get real-time stock quotes.</li>
+        <li>💼 <strong>Manage Portfolio</strong>: View your account balances and current holdings.</li>
+        <li>📈 <strong>Place Trades</strong>: Execute market buy and sell orders.</li>
+        <li>📝 <strong>Order Book</strong>: List, review, and cancel active limit or market orders.</li>
+      </ul>
+    </div>
+
+    <div class="card doc-card">
+      <h2>1. Cloud Integration (Recommended)</h2>
+      <p>
+        Use this setup if you want to connect your local terminal or desktop agent to your cloud-hosted Fly.io trading engine.
+      </p>
+      
+      <div class="step-box">
+        <span class="step-num">Step A</span>
+        <p>Ensure your cloud MCP server is deployed and running. Run the following command in your terminal to add the server to your agent's config:</p>
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span>Terminal Command</span>
+          <button class="btn btn-sm btn-copy" onclick="copyCommand('cloud-mcp-cmd')">Copy</button>
+        </div>
+        <pre><code id="cloud-mcp-cmd">claude mcp add --scope user --transport http beacon-trading https://agent-beacon-trading-paper.fly.dev/mcp</code></pre>
+      </div>
+
+      <div class="step-box" style="margin-top: 20px;">
+        <span class="step-num">Step B</span>
+        <p>Restart or reload your agent session to activate the tools. In the Antigravity TUI, type <code>/mcp</code> to refresh your connections.</p>
+      </div>
+    </div>
+
+    <div class="card doc-card">
+      <h2>2. Local Development Integration</h2>
+      <p>
+        If you are running the trading stack locally on your computer, you can configure your agent to spin up the local MCP server process directly via stdio.
+      </p>
+
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span>Terminal Command (Local Stdio)</span>
+          <button class="btn btn-sm btn-copy" onclick="copyCommand('local-mcp-cmd')">Copy</button>
+        </div>
+        <pre><code id="local-mcp-cmd">claude mcp add --scope project --transport stdio beacon-trading-local -- uv run --directory ./mcp_server beacon-trading-mcp-server</code></pre>
+      </div>
+      <p class="muted-note" style="margin-top: 8px;">
+        Note: Replace <code>./mcp_server</code> with the absolute path to your local <code>mcp_server</code> folder if running outside the project root.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Column: API Reference & Status -->
+  <div class="agentic-status-column">
+    <div class="card status-card">
+      <h3>Connection Status</h3>
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <div>
+          <strong id="status-title">Web API Online</strong>
+          <p id="status-url" class="muted">Loading host…</p>
+        </div>
+      </div>
+      <div class="status-indicator" style="margin-top: 16px;">
+        <span class="status-dot online"></span>
+        <div>
+          <strong>MCP Server Endpoint</strong>
+          <p id="mcp-endpoint-url" class="muted">Loading endpoint…</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card status-card">
+      <h3>Available Tools</h3>
+      <div class="tools-grid">
+        <div class="tool-item">
+          <code>get_portfolio</code>
+          <p>Get account balance and equity summary.</p>
+        </div>
+        <div class="tool-item">
+          <code>get_equity_positions</code>
+          <p>List all current stock holdings.</p>
+        </div>
+        <div class="tool-item">
+          <code>get_equity_quotes</code>
+          <p>Retrieve real-time price info.</p>
+        </div>
+        <div class="tool-item">
+          <code>review_equity_order</code>
+          <p>Preview order details and get confirmation token.</p>
+        </div>
+        <div class="tool-item">
+          <code>place_equity_order</code>
+          <p>Submit and execute orders using token.</p>
+        </div>
+        <div class="tool-item">
+          <code>cancel_equity_order</code>
+          <p>Cancel active pending orders.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Dynamically update the instructions based on current origin
+  (function() {
+    const origin = window.location.origin;
+    const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+    
+    // Determine the MCP SSE URL
+    let mcpUrl;
+    if (isLocal) {
+      mcpUrl = "http://127.0.0.1:8765/mcp";
+    } else {
+      // e.g. https://beacon-trading-paper.fly.dev -> https://agent-beacon-trading-paper.fly.dev/mcp
+      mcpUrl = origin.replace("https://", "https://agent-") + "/mcp";
+    }
+
+    // Set status card texts
+    document.getElementById("status-url").textContent = origin;
+    document.getElementById("mcp-endpoint-url").textContent = mcpUrl;
+
+    // Set copyable command content
+    const cmd = `claude mcp add --scope user --transport http beacon-trading ${mcpUrl}`;
+    document.getElementById("cloud-mcp-cmd").textContent = cmd;
+  })();
+
+  function copyCommand(elemId) {
+    const code = document.getElementById(elemId).textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      toast("Command copied to clipboard", "success");
+    }).catch(err => {
+      toast("Failed to copy command: " + err, "error");
+    });
+  }
+</script>
+{% endblock %}
