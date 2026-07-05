@@ -12,17 +12,17 @@
     const on = s.watched;
     return `
       <tr class="clickable" data-symbol="${esc(s.symbol)}">
-        <td class="star-col">
+        <td class="star-col col-star">
           <button class="star ${on ? "on" : ""}" data-action="toggle-watch"
                   data-symbol="${esc(s.symbol)}" data-watched="${on ? "1" : "0"}"
                   title="${on ? "Remove from watchlist" : "Add to watchlist"}"
                   aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}">${on ? "★" : "☆"}</button>
         </td>
-        <td class="sym">${esc(s.symbol)}</td>
-        <td class="muted">${esc(s.name)}</td>
-        <td class="num">${fmtMoney(s.price)}</td>
-        <td class="num ${changeClass(s.change_pct)}">${fmtPct(s.change_pct)}</td>
-        <td class="num">
+        <td class="sym col-symbol">${esc(s.symbol)}</td>
+        <td class="company-col muted">${esc(s.name)}</td>
+        <td class="num col-price">${fmtMoney(s.price)}</td>
+        <td class="num col-today ${changeClass(s.change_pct)}">${fmtPct(s.change_pct)}</td>
+        <td class="num col-actions">
           <div class="row-actions">
             <button class="btn btn-buy btn-sm" data-action="buy">Buy</button>
             <button class="btn btn-sell btn-sm" data-action="sell">Sell</button>

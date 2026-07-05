@@ -10,14 +10,35 @@
 
   if (!els.toggle || !els.window) return;
 
+  let chatHistory = [];
+  try {
+    const stored = localStorage.getItem("chat-history");
+    if (stored) {
+      chatHistory = JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to parse chat history:", e);
+  }
+
   // Restore state on load
   const isOpen = localStorage.getItem("chat-open") === "true";
   if (isOpen) {
     document.body.classList.add("chat-open");
-    // Wait a brief tick for the window transition to complete and then scroll
+  }
+
+  // Scroll to bottom helper
+  function scrollToBottom() {
     setTimeout(() => {
       els.messages.scrollTop = els.messages.scrollHeight;
-    }, 100);
+    }, 50);
+  }
+
+  // Restore history bubbles
+  if (chatHistory.length) {
+    for (const msg of chatHistory) {
+      addBubble(msg.text, msg.sender, false);
+    }
+    scrollToBottom();
   }
 
   // Toggle Chat Window Open (Expand)
@@ -25,9 +46,7 @@
     document.body.classList.add("chat-open");
     localStorage.setItem("chat-open", "true");
     els.input.focus();
-    setTimeout(() => {
-      els.messages.scrollTop = els.messages.scrollHeight;
-    }, 100);
+    scrollToBottom();
   });
 
   // Minimize Chat Window (Collapse)
@@ -81,12 +100,16 @@
     return html;
   }
 
-  function addBubble(text, sender) {
+  function addBubble(text, sender, save = true) {
     const bubble = document.createElement("div");
     bubble.className = `chat-bubble ${sender}`;
     bubble.innerHTML = formatMarkdown(text);
     els.messages.appendChild(bubble);
     els.messages.scrollTop = els.messages.scrollHeight;
+    if (save && (sender === "user" || sender === "agent")) {
+      chatHistory.push({ text, sender });
+      localStorage.setItem("chat-history", JSON.stringify(chatHistory));
+    }
     return bubble;
   }
 
@@ -101,8 +124,14 @@
     // Add typing indicator
     const typingBubble = addBubble("🤖 <i>typing...</i>", "agent typing");
 
+    // Map history payload (exclude the current message we just pushed)
+    const apiHistory = chatHistory.slice(0, -1).map(h => ({
+      role: h.sender === "user" ? "user" : "model",
+      text: h.text
+    }));
+
     try {
-      const data = await API.post("/api/chat", { message: value });
+      const data = await API.post("/api/chat", { message: value, history: apiHistory });
       typingBubble.remove();
       
       addBubble(data.response, "agent");

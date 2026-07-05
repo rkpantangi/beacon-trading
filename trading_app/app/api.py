@@ -331,12 +331,23 @@ def cancel_order(request: Request, order_id: str, account_id: Optional[str] = No
     return {"order": order.to_dict()}
 
 
+class ChatMessage(BaseModel):
+    role: str
+    text: str
+
+
 class ChatRequest(BaseModel):
     message: str
+    history: Optional[List[ChatMessage]] = None
 
 
 GEMINI_SYSTEM_PROMPT = """You are the AI trading assistant for Beacon Trading.
 Analyze the user's message and determine the appropriate action to take.
+
+CRITICAL INSTRUCTIONS:
+- Never hallucinate or make up list data (like order histories, watchlists, positions, or balances). 
+- If the user asks to see/view these items, or corrects you/refers to them, you MUST set the 'action' to the correct database-query action (e.g., 'orders_list', 'watchlist_view', 'positions', 'balance') rather than 'none'. The system backend will fetch the real-time data for you.
+
 You must respond with a single valid JSON object containing exactly these fields:
 1. "action": one of "balance", "positions", "buy", "sell", "search", "quote", "orders_list", "cancel_order", "watchlist_view", "watchlist_add", "watchlist_remove", "deposit", "withdraw", or "none"
 2. "symbol": the ticker symbol (in uppercase, e.g. "AAPL") if applicable, else null
@@ -352,21 +363,45 @@ Example mapping:
 - "buy 10 AAPL at 150" -> {"action": "buy", "symbol": "AAPL", "qty": 10, "limit_price": 150.0, "query": null, "order_id": null, "amount": null, "response": "Let me place that limit order for you..."}
 - "what is Tesla's stock price?" -> {"action": "quote", "symbol": "TSLA", "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Getting quote for Tesla..."}
 - "search for Microsoft" -> {"action": "search", "symbol": null, "qty": null, "limit_price": null, "query": "Microsoft", "order_id": null, "amount": null, "response": "Searching catalog for Microsoft..."}
+- "show my orders" or "show open orders" or "show pending trades" or "you are showing above all closed orders, show open orders" -> {"action": "orders_list", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Retrieving your orders..."}
+- "cancel order ord-b7f" -> {"action": "cancel_order", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": "ord-b7f", "amount": null, "response": "Canceling order ord-b7f..."}
+- "show my watchlist" or "watchlist" -> {"action": "watchlist_view", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Retrieving your watchlist..."}
+- "add MSFT to watchlist" -> {"action": "watchlist_add", "symbol": "MSFT", "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Adding MSFT to your watchlist..."}
+- "remove NVDA from watchlist" -> {"action": "watchlist_remove", "symbol": "NVDA", "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Removing NVDA from your watchlist..."}
+- "deposit 500" or "add $500 to my account" -> {"action": "deposit", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": 500.0, "response": "Depositing $500.00 into your account..."}
+- "withdraw $100" -> {"action": "withdraw", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": 100.0, "response": "Withdrawing $100.00 from your account..."}
 
 Always return ONLY a raw JSON string. Do not wrap in backticks or markdown codeblocks."""
 
 
-def _call_gemini_api(message: str, api_key: str) -> Optional[dict]:
+def _call_gemini_api(message: str, api_key: str, history: Optional[List[ChatMessage]] = None) -> Optional[dict]:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
+    
+    contents = []
+    if history:
+        first_msg = history[0]
+        contents.append({
+            "role": first_msg.role,
+            "parts": [{"text": f"{GEMINI_SYSTEM_PROMPT}\n\nUser Message: {first_msg.text}"}]
+        })
+        for msg in history[1:]:
+            contents.append({
+                "role": msg.role,
+                "parts": [{"text": msg.text}]
+            })
+        contents.append({
+            "role": "user",
+            "parts": [{"text": f"User Message: {message}"}]
+        })
+    else:
+        contents.append({
+            "role": "user",
+            "parts": [{"text": f"{GEMINI_SYSTEM_PROMPT}\n\nUser Message: {message}"}]
+        })
+
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{GEMINI_SYSTEM_PROMPT}\n\nUser Message: {message}"}
-                ]
-            }
-        ],
+        "contents": contents,
         "generationConfig": {
             "responseMimeType": "application/json"
         }
@@ -394,7 +429,7 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
     # Attempt to route via Gemini LLM if API key is present
     api_key = os.environ.get("GEMINI_API_KEY")
     if api_key:
-        llm_res = _call_gemini_api(msg, api_key)
+        llm_res = _call_gemini_api(msg, api_key, body.history)
         if llm_res and isinstance(llm_res, dict):
             action = llm_res.get("action", "none")
             symbol = llm_res.get("symbol")
@@ -523,7 +558,26 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                 orders = svc.store.orders.list(acct)
                 if not orders:
                     return {"response": "You have no active or historical orders."}
-                res = "📝 **Your Recent Orders**:\n"
+                
+                check_text = (msg + " " + initial_response).lower()
+                if any(w in check_text for w in ["open", "active", "pending", "working"]):
+                    orders = [o for o in orders if o.status == "open"]
+                    if not orders:
+                        return {"response": f"{initial_response}\n\nYou have no active or **open orders** at the moment."}
+                    res = f"{initial_response}\n\n📝 **Your Open Orders**:\n" if initial_response else "📝 **Your Open Orders**:\n"
+                elif "filled" in check_text or "executed" in check_text:
+                    orders = [o for o in orders if o.status == "filled"]
+                    if not orders:
+                        return {"response": f"{initial_response}\n\nYou have no **filled orders** at the moment."}
+                    res = f"{initial_response}\n\n📝 **Your Filled Orders**:\n" if initial_response else "📝 **Your Filled Orders**:\n"
+                elif "canceled" in check_text:
+                    orders = [o for o in orders if o.status == "canceled"]
+                    if not orders:
+                        return {"response": f"{initial_response}\n\nYou have no **canceled orders** at the moment."}
+                    res = f"{initial_response}\n\n📝 **Your Canceled Orders**:\n" if initial_response else "📝 **Your Canceled Orders**:\n"
+                else:
+                    res = f"{initial_response}\n\n📝 **Your Recent Orders**:\n" if initial_response else "📝 **Your Recent Orders**:\n"
+                
                 for o in orders[-10:]:  # Last 10 orders
                     price_str = f"at ${o.limit_price:,.2f}" if o.limit_price else "at market price"
                     res += f"* **{o.side.upper()} {o.qty} {o.symbol}** {price_str} | Status: **{o.status.capitalize()}** (ID: `{o.id}`)\n"

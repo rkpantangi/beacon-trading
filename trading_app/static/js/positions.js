@@ -31,7 +31,7 @@
       body.innerHTML = positions.map((p) => `
         <tr class="clickable" data-symbol="${esc(p.symbol)}">
           <td class="sym">${esc(p.symbol)}</td>
-          <td class="muted">${esc(p.name)}</td>
+          <td class="company-col muted">${esc(p.name)}</td>
           <td class="num">${fmtQty(p.qty)}</td>
           <td class="num">${fmtMoney(p.avg_cost)}</td>
           <td class="num">${fmtMoney(p.price)}</td>
