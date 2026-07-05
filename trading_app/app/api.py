@@ -9,6 +9,10 @@ from __future__ import annotations
 import secrets
 import threading
 import time
+import re
+import os
+import urllib.request
+import json
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -325,3 +329,157 @@ def cancel_order(request: Request, order_id: str, account_id: Optional[str] = No
     except TradingError as e:
         raise HTTPException(400, str(e))
     return {"order": order.to_dict()}
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+GEMINI_SYSTEM_PROMPT = """You are the AI trading assistant for Beacon Trading.
+Analyze the user's message and determine the appropriate action to take.
+You must respond with a single valid JSON object containing exactly these fields:
+1. "action": one of "balance", "positions", "buy", "sell", or "none"
+2. "symbol": the ticker symbol (in uppercase) if user wants to buy/sell, else null
+3. "qty": the integer quantity to buy/sell, else null
+4. "limit_price": the float limit price if specified, else null
+5. "response": a friendly conversational response to show the user (e.g. "Checking your balance..." or answering general questions)
+
+Example mapping:
+- "what is my balance?" -> {"action": "balance", "symbol": null, "qty": null, "limit_price": null, "response": "Sure, checking your account balance now..."}
+- "buy 10 AAPL at 150" -> {"action": "buy", "symbol": "AAPL", "qty": 10, "limit_price": 150.0, "response": "Let me place that limit order for you..."}
+- "how are you today?" -> {"action": "none", "symbol": null, "qty": null, "limit_price": null, "response": "I'm doing great, thank you! How can I help you trade today?"}
+
+Always return ONLY a raw JSON string. Do not wrap in backticks or markdown codeblocks."""
+
+
+def _call_gemini_api(message: str, api_key: str) -> Optional[dict]:
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{GEMINI_SYSTEM_PROMPT}\n\nUser Message: {message}"}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
+    try:
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data_bytes, headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=4) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            text_content = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+            return json.loads(text_content)
+    except Exception as e:
+        print(f"DEBUG ERROR: Gemini API call failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+@router.post("/chat")
+def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = None):
+    svc = _svc(request)
+    acct = _acct(account_id)
+    msg = body.message.strip()
+
+    # Attempt to route via Gemini LLM if API key is present
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if api_key:
+        llm_res = _call_gemini_api(msg, api_key)
+        if llm_res and isinstance(llm_res, dict):
+            action = llm_res.get("action", "none")
+            symbol = llm_res.get("symbol")
+            qty = llm_res.get("qty")
+            limit_price = llm_res.get("limit_price")
+            initial_response = llm_res.get("response", "")
+
+            if action == "balance":
+                try:
+                    portfolio = svc.account_summary(acct)
+                    cash = float(portfolio["cash_balance"])
+                    equity = float(portfolio["total_equity"])
+                    pl = float(portfolio["unrealized_pl"])
+                    sign = "+" if pl >= 0 else ""
+                    return {
+                        "response": (
+                            f"{initial_response}\n\n"
+                            f"💳 **Account Balances**:\n"
+                            f"* **Total Equity**: ${equity:,.2f}\n"
+                            f"* **Buying Power**: ${cash:,.2f}\n"
+                            f"* **Unrealized P&L**: {sign}${pl:,.2f} ({portfolio['day_change_pct']}% today)"
+                        )
+                    }
+                except Exception as e:
+                    return {"response": f"Failed to retrieve balance details: {str(e)}"}
+
+            elif action == "positions":
+                try:
+                    positions = svc.positions_with_prices(acct)
+                    if not positions:
+                        return {"response": f"{initial_response}\n\nYou currently hold **no positions** in your portfolio."}
+                    res = f"{initial_response}\n\n💼 **Your Active Holdings**:\n"
+                    for p in positions:
+                        p_sym = p["symbol"]
+                        p_qty = p["qty"]
+                        val = float(p["market_value"]) if p["market_value"] is not None else 0.0
+                        pl = float(p["unrealized_pl"]) if p["unrealized_pl"] is not None else 0.0
+                        sign = "+" if pl >= 0 else ""
+                        res += f"* **{p_sym}**: {p_qty} shares (Valued at ${val:,.2f} | P&L: {sign}${pl:,.2f})\n"
+                    return {"response": res}
+                except Exception as e:
+                    return {"response": f"Failed to retrieve positions: {str(e)}"}
+
+            elif action in ["buy", "sell"] and symbol and qty:
+                try:
+                    qty = int(qty)
+                    symbol = symbol.upper()
+                    entry = svc.catalog.get(symbol)
+                    if not entry:
+                        search_res = svc.catalog.search(symbol, limit=1)
+                        if search_res:
+                            symbol = search_res[0]["symbol"]
+                            entry = svc.catalog.get(symbol)
+
+                    if not entry:
+                        return {"response": f"Sorry, I couldn't find a stock matching '{symbol}' in the catalog."}
+
+                    order_type = "limit" if limit_price else "market"
+                    order = svc.place_order(acct, symbol, action, qty, order_type, limit_price)
+                    exec_action = "Bought" if action == "buy" else "Sold"
+                    executed_price = float(order.filled_price) if order.filled_price else (limit_price or 0.0)
+
+                    if order.status == OrderStatus.FILLED:
+                        status_msg = f"filled at **${executed_price:,.2f}**"
+                    else:
+                        status_msg = "placed as pending"
+
+                    return {
+                        "response": (
+                            f"{initial_response}\n\n"
+                            f"✅ **Trade Processed Successfully!**\n"
+                            f"I have {exec_action.lower()} **{qty} shares** of **{symbol}** ({entry['name']}) {status_msg}.\n"
+                            f"* **Order ID**: `{order.order_id}`\n"
+                            f"* **Order Type**: {order_type.upper()}\n"
+                            f"* **Status**: {order.status.capitalize()}"
+                        )
+                    }
+                except TradingError as e:
+                    return {"response": f"❌ **Trade Failed**: {str(e)}"}
+                except Exception as e:
+                    return {"response": f"❌ **Error executing trade**: {str(e)}"}
+
+            else:
+                return {"response": initial_response}
+
+    # Fallback response if API key is missing or model request failed / rate-limited
+    return {
+        "response": "Sorry, the trading assistant is currently unavailable. Please try again later."
+    }
+
+
+
