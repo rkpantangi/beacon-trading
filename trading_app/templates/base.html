@@ -72,13 +72,45 @@
       <div class="form-error" id="op-error" hidden></div>
       <button type="submit" class="btn btn-buy" id="op-submit">Buy</button>
     </form>
+
+    <div class="panel-details" id="op-details" hidden>
+      <hr class="panel-divider">
+      <h3>About the company</h3>
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="muted">Sector</span>
+          <span id="op-sector">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="muted">Industry</span>
+          <span id="op-industry">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="muted">Day Range</span>
+          <span id="op-day-range">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="muted">52-Week Range</span>
+          <span id="op-year-range">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="muted">Volume</span>
+          <span id="op-volume">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="muted">Exchange</span>
+          <span id="op-exchange">—</span>
+        </div>
+      </div>
+    </div>
   </aside>
+
 
   <div id="toasts"></div>
 
-  <script src="/static/js/api.js"></script>
-  <script src="/static/js/theme.js"></script>
-  <script src="/static/js/orderpanel.js"></script>
+  <script src="/static/js/api.js?v=2"></script>
+  <script src="/static/js/theme.js?v=2"></script>
+  <script src="/static/js/orderpanel.js?v=2"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

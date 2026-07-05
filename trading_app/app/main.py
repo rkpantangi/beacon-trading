@@ -98,3 +98,10 @@ def page_history(request: Request):
 @app.get("/balances", response_class=HTMLResponse)
 def page_balances(request: Request):
     return _page(request, "/balances")
+
+
+@app.get("/stock/{symbol}", response_class=HTMLResponse)
+def page_stock_details(request: Request, symbol: str):
+    return templates.TemplateResponse(
+        request, "stock.html", {"title": f"{symbol.upper()} Details", "active": "/", "symbol": symbol.upper()})
+

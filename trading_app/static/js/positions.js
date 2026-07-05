@@ -56,7 +56,11 @@
     const row = ev.target.closest("tr[data-symbol]");
     if (!row) return;
     const action = ev.target.closest("button[data-action]");
-    OrderPanel.open(row.dataset.symbol, action ? action.dataset.action : "buy");
+    if (action) {
+      OrderPanel.open(row.dataset.symbol, action.dataset.action);
+    } else {
+      window.location.href = `/stock/${encodeURIComponent(row.dataset.symbol)}`;
+    }
   });
 
   document.addEventListener("portfolio:changed", load);

@@ -35,10 +35,41 @@ class Quote:
         return asdict(self)
 
 
+@dataclass
+class AssetDetails:
+    symbol: str
+    name: str
+    price: Optional[float]
+    prev_close: Optional[float]
+    change: Optional[float]
+    change_pct: Optional[float]
+    currency: str
+    as_of: float
+    fifty_two_week_high: Optional[float]
+    fifty_two_week_low: Optional[float]
+    day_high: Optional[float]
+    day_low: Optional[float]
+    volume: Optional[int]
+    exchange: Optional[str]
+    sector: Optional[str]
+    industry: Optional[str]
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
 class PriceProvider(ABC):
     @abstractmethod
     def get_quote(self, symbol: str) -> Optional[Quote]:
         """Latest quote, or None if the symbol can't be priced."""
+
+    def get_details(self, symbol: str) -> Optional[AssetDetails]:
+        """Get detailed asset information, or None if unavailable."""
+        return None
+
+    def get_chart_data(self, symbol: str, range_str: str) -> Optional[dict]:
+        """Get historical chart data, or None if unavailable."""
+        return None
 
     def get_quotes(self, symbols: List[str]) -> Dict[str, Quote]:
         quotes = {}
@@ -53,6 +84,7 @@ class YahooPriceProvider(PriceProvider):
     def __init__(self, cache_ttl: int = CACHE_TTL):
         self.cache_ttl = cache_ttl
         self._cache: Dict[str, Quote] = {}
+        self._details_cache: Dict[str, AssetDetails] = {}
         self._lock = threading.Lock()
 
     def get_quote(self, symbol: str) -> Optional[Quote]:
@@ -67,6 +99,20 @@ class YahooPriceProvider(PriceProvider):
                 self._cache[symbol] = quote
             return quote
         return cached  # stale is better than nothing if the fetch failed
+
+    def get_details(self, symbol: str) -> Optional[AssetDetails]:
+        symbol = symbol.upper()
+        with self._lock:
+            cached = self._details_cache.get(symbol)
+        if cached and time.time() - cached.as_of < self.cache_ttl:
+            return cached
+        details = self._fetch_details(symbol)
+        if details:
+            with self._lock:
+                self._details_cache[symbol] = details
+            return details
+        return cached
+
 
     def get_quotes(self, symbols: List[str]) -> Dict[str, Quote]:
         quotes: Dict[str, Quote] = {}
@@ -111,3 +157,96 @@ class YahooPriceProvider(PriceProvider):
             )
         except Exception:
             return None
+
+    def _fetch_details(self, symbol: str) -> Optional[AssetDetails]:
+        symbol = symbol.upper()
+        headers = {"User-Agent": "Mozilla/5.0"}
+        
+        # 1. Fetch from chart endpoint
+        chart_url = YAHOO_CHART_URL.format(symbol=urllib.parse.quote(symbol))
+        req_chart = urllib.request.Request(chart_url, headers=headers)
+        
+        meta = None
+        try:
+            with urllib.request.urlopen(req_chart, timeout=10) as resp:
+                chart_data = json.loads(resp.read().decode("utf-8"))
+                meta = chart_data["chart"]["result"][0]["meta"]
+        except Exception:
+            return None
+            
+        # 2. Fetch from search endpoint
+        search_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={urllib.parse.quote(symbol)}"
+        req_search = urllib.request.Request(search_url, headers=headers)
+        
+        sector = None
+        industry = None
+        try:
+            with urllib.request.urlopen(req_search, timeout=10) as resp:
+                search_data = json.loads(resp.read().decode("utf-8"))
+                quotes = search_data.get("quotes", [])
+                for q in quotes:
+                    if q.get("symbol") == symbol:
+                        sector = q.get("sector")
+                        industry = q.get("industry")
+                        break
+        except Exception:
+            pass
+            
+        price = meta.get("regularMarketPrice")
+        prev = meta.get("chartPreviousClose") or meta.get("previousClose")
+        change = round(price - prev, 4) if price is not None and prev is not None else None
+        change_pct = round((price - prev) / prev * 100, 4) if price is not None and prev is not None else None
+        
+        return AssetDetails(
+            symbol=symbol,
+            name=meta.get("longName") or meta.get("shortName") or symbol,
+            price=price,
+            prev_close=prev,
+            change=change,
+            change_pct=change_pct,
+            currency=meta.get("currency", "USD"),
+            as_of=time.time(),
+            fifty_two_week_high=meta.get("fiftyTwoWeekHigh"),
+            fifty_two_week_low=meta.get("fiftyTwoWeekLow"),
+            day_high=meta.get("regularMarketDayHigh"),
+            day_low=meta.get("regularMarketDayLow"),
+            volume=meta.get("regularMarketVolume"),
+            exchange=meta.get("fullExchangeName") or meta.get("exchangeName"),
+            sector=sector,
+            industry=industry
+        )
+
+    def get_chart_data(self, symbol: str, range_str: str) -> Optional[dict]:
+        symbol = symbol.upper()
+        intervals = {
+            "1d": "5m",
+            "5d": "15m",
+            "1mo": "1d",
+            "1y": "1d"
+        }
+        interval = intervals.get(range_str, "1d")
+        headers = {"User-Agent": "Mozilla/5.0"}
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range={range_str}&interval={interval}"
+        req = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            result = data["chart"]["result"][0]
+            timestamps = result.get("timestamp", [])
+            quotes = result["indicators"]["quote"][0]
+            closes = quotes.get("close", [])
+            
+            cleaned = []
+            for t, c in zip(timestamps, closes):
+                if c is not None:
+                    cleaned.append({"timestamp": t, "close": round(c, 4)})
+            return {
+                "symbol": symbol,
+                "range": range_str,
+                "interval": interval,
+                "data": cleaned
+            }
+        except Exception:
+            return None
+
+

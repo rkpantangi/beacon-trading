@@ -93,7 +93,15 @@ class TradingService:
             })
         return out
 
+    def get_asset_details(self, symbol: str) -> Optional[dict]:
+        details = self.prices.get_details(symbol)
+        return details.to_dict() if details else None
+
+    def get_chart_data(self, symbol: str, range_str: str) -> Optional[dict]:
+        return self.prices.get_chart_data(symbol, range_str)
+
     # ---- transfers ---------------------------------------------------------
+
 
     def deposit(self, account_id: str, amount: float) -> Transaction:
         self._validate_amount(amount)

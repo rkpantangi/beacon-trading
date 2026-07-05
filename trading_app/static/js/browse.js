@@ -67,7 +67,11 @@
     const row = ev.target.closest("tr[data-symbol]");
     if (!row) return;
     const action = ev.target.closest("button[data-action]");
-    OrderPanel.open(row.dataset.symbol, action ? action.dataset.action : "buy");
+    if (action) {
+      OrderPanel.open(row.dataset.symbol, action.dataset.action);
+    } else {
+      window.location.href = `/stock/${encodeURIComponent(row.dataset.symbol)}`;
+    }
   }
 
   watchBody.addEventListener("click", onBodyClick);
@@ -104,13 +108,7 @@
     const symbol = item.dataset.symbol;
     results.hidden = true;
     search.value = "";
-    try {
-      await API.post("/api/watchlist", { symbol });
-      await loadStocks();
-      OrderPanel.open(symbol, "buy");
-    } catch (e) {
-      toast(e.message, "error");
-    }
+    window.location.href = `/stock/${encodeURIComponent(symbol)}`;
   });
 
   document.addEventListener("click", (ev) => {

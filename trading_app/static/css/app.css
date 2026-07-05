@@ -337,3 +337,179 @@ input:focus, select:focus { border-color: var(--primary); }
   .transfer-forms { grid-template-columns: 1fr; }
   .bp-chip { display: none; }
 }
+
+.panel-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0 20px;
+}
+.panel-details h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.detail-item span:first-child {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.detail-item span:last-child {
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+/* ---- stock details page --------------------------------------------------- */
+
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.stock-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stock-symbol {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+.stock-exchange-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.stock-name {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+.stock-action-buttons {
+  display: flex;
+  gap: 12px;
+}
+.stock-action-buttons .btn-lg {
+  padding: 12px 32px;
+  font-size: 16px;
+}
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 8px;
+}
+.detail-card {
+  margin-bottom: 0;
+}
+.stock-price-container {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.detail-price {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.detail-change {
+  font-size: 16px;
+  font-weight: 600;
+}
+.price-as-of {
+  font-size: 12px;
+  color: var(--muted);
+}
+.metrics-grid, .profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+}
+.metric-item, .profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.metric-label, .profile-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.metric-value, .profile-value {
+  font-size: 16px;
+  font-weight: 500;
+}
+.back-link-container {
+  margin-top: 24px;
+}
+
+/* ---- chart card ----------------------------------------------------------- */
+
+.chart-card-container {
+  margin-top: 8px;
+  margin-bottom: 20px;
+  padding: 16px 20px 20px;
+}
+.chart-timeframe-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.chart-timeframe-selector {
+  display: flex;
+  gap: 6px;
+  background: var(--surface-2);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.timeframe-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+.timeframe-btn:hover {
+  color: var(--text);
+}
+.timeframe-btn.active {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow);
+}
+.chart-wrapper {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+
+

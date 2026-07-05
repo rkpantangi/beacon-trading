@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="stock-header">
+  <div class="stock-header-main">
+    <div class="stock-title-row">
+      <button class="star" id="btn-watch-stock" title="Add to watchlist" aria-label="Add to watchlist" style="font-size: 26px; padding: 2px 6px; margin-right: 4px;">☆</button>
+      <h1 class="stock-symbol" id="detail-symbol">{{ symbol }}</h1>
+      <span class="stock-exchange-badge" id="detail-exchange">Loading…</span>
+    </div>
+    <p class="stock-name" id="detail-name">Loading company name…</p>
+    <div class="stock-price-container">
+      <span class="detail-price" id="detail-price">$0.00</span>
+      <span class="detail-change" id="detail-change">+0.00 (+0.00%)</span>
+      <span class="price-as-of">As of <span id="detail-as-of">—</span> (Delayed ~5 mins)</span>
+    </div>
+  </div>
+  <div class="stock-action-buttons">
+    <button class="btn btn-buy btn-lg" id="btn-buy-stock">Buy</button>
+    <button class="btn btn-sell btn-lg" id="btn-sell-stock">Sell</button>
+  </div>
+</div>
+
+<!-- Chart Card -->
+<div class="card chart-card-container">
+  <div class="chart-timeframe-header">
+    <div class="chart-timeframe-selector" id="chart-ranges">
+      <button class="timeframe-btn" data-range="1d">1D</button>
+      <button class="timeframe-btn" data-range="5d">5D</button>
+      <button class="timeframe-btn active" data-range="1mo">1M</button>
+      <button class="timeframe-btn" data-range="1y">1Y</button>
+    </div>
+  </div>
+  <div class="chart-wrapper">
+    <canvas id="stock-chart"></canvas>
+  </div>
+</div>
+
+<div class="stock-grid">
+
+
+  <!-- Performance stats grid -->
+  <div class="card detail-card stats-card-grid">
+    <h2>Performance Stats</h2>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <span class="metric-label">Previous Close</span>
+        <span class="metric-value" id="stat-prev-close">—</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Volume</span>
+        <span class="metric-value" id="stat-volume">—</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Day's Range</span>
+        <span class="metric-value" id="stat-day-range">—</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">52-Week Range</span>
+        <span class="metric-value" id="stat-year-range">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="card detail-card profile-card">
+    <h2>Company Profile</h2>
+    <div class="profile-grid">
+      <div class="profile-item">
+        <span class="profile-label">Sector</span>
+        <span class="profile-value" id="profile-sector">—</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Industry</span>
+        <span class="profile-value" id="profile-industry">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="back-link-container">
+  <a href="/" class="btn btn-ghost">← Back to Browse</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  window.STOCK_SYMBOL = "{{ symbol }}";
+</script>
+<script src="/static/js/stock.js?v=2"></script>
+{% endblock %}

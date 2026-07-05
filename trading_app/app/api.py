@@ -154,6 +154,34 @@ def get_stock(request: Request, symbol: str):
     }
 
 
+@router.get("/stocks/{symbol}/details")
+def get_stock_details(request: Request, symbol: str):
+    svc = _svc(request)
+    entry = svc.catalog.get(symbol)
+    if not entry:
+        raise HTTPException(404, f"Unknown symbol '{symbol.upper()}'")
+    details = svc.get_asset_details(entry["symbol"])
+    if not details:
+        raise HTTPException(404, f"Details unavailable for symbol '{symbol.upper()}'")
+    return details
+
+
+@router.get("/stocks/{symbol}/chart")
+def get_stock_chart(request: Request, symbol: str, range: str = "1mo"):
+    if range not in ["1d", "5d", "1mo", "1y"]:
+        raise HTTPException(400, "Invalid range. Must be one of 1d, 5d, 1mo, 1y")
+    svc = _svc(request)
+    entry = svc.catalog.get(symbol)
+    if not entry:
+        raise HTTPException(404, f"Unknown symbol '{symbol.upper()}'")
+    chart_data = svc.get_chart_data(entry["symbol"], range)
+    if not chart_data:
+        raise HTTPException(404, f"Chart data unavailable for symbol '{symbol.upper()}'")
+    return chart_data
+
+
+
+
 @router.get("/watchlist")
 def get_watchlist(request: Request, account_id: Optional[str] = None):
     """The account's saved symbols, newest-added first, each with a quote."""

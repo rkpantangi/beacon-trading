@@ -23,6 +23,13 @@ const OrderPanel = (function () {
     submit: document.getElementById("op-submit"),
     form: document.getElementById("op-form"),
     close: document.getElementById("op-close"),
+    details: document.getElementById("op-details"),
+    sector: document.getElementById("op-sector"),
+    industry: document.getElementById("op-industry"),
+    dayRange: document.getElementById("op-day-range"),
+    yearRange: document.getElementById("op-year-range"),
+    volume: document.getElementById("op-volume"),
+    exchange: document.getElementById("op-exchange"),
   };
 
   const state = { symbol: null, side: "buy", type: "market", quote: null,
@@ -36,6 +43,7 @@ const OrderPanel = (function () {
     els.qty.value = "";
     els.limit.value = "";
     hideError();
+    els.details.hidden = true;
 
     els.symbol.textContent = symbol;
     els.name.textContent = "";
@@ -45,10 +53,11 @@ const OrderPanel = (function () {
     render();
 
     try {
-      const [quote, acct, positions] = await Promise.all([
+      const [quote, acct, positions, details] = await Promise.all([
         API.get(`/api/stocks/${encodeURIComponent(symbol)}`),
         API.get("/api/account"),
         API.get("/api/positions"),
+        API.get(`/api/stocks/${encodeURIComponent(symbol)}/details`).catch(() => null),
       ]);
       state.quote = quote;
       state.buyingPower = acct.buying_power;
@@ -61,12 +70,36 @@ const OrderPanel = (function () {
       if (state.type === "limit" && !els.limit.value && quote.price) {
         els.limit.value = quote.price.toFixed(2);
       }
+      
+      if (details) {
+        els.sector.textContent = details.sector || "—";
+        els.industry.textContent = details.industry || "—";
+        
+        const dayLow = details.day_low;
+        const dayHigh = details.day_high;
+        els.dayRange.textContent = (dayLow !== null && dayHigh !== null) 
+          ? `${fmtMoney(dayLow)} - ${fmtMoney(dayHigh)}` 
+          : "—";
+          
+        const yrLow = details.fifty_two_week_low;
+        const yrHigh = details.fifty_two_week_high;
+        els.yearRange.textContent = (yrLow !== null && yrHigh !== null) 
+          ? `${fmtMoney(yrLow)} - ${fmtMoney(yrHigh)}` 
+          : "—";
+          
+        els.volume.textContent = details.volume ? details.volume.toLocaleString() : "—";
+        els.exchange.textContent = details.exchange || "—";
+        els.details.hidden = false;
+      } else {
+        els.details.hidden = true;
+      }
     } catch (e) {
       showError(e.message);
     }
     render();
     els.qty.focus();
   }
+
 
   function show() {
     els.backdrop.hidden = false;
