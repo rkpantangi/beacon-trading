@@ -264,7 +264,7 @@
                     if (list && list.length > 0) {
                       return list.map(o => {
                         const p = o.fill_price || o.limit_price;
-                        return `🟢 Bought ${fmtQty(o.qty)} sh. @ ${fmtMoney(p)}`;
+                        return `🟢 Bought ${fmtQty(o.qty)} @ ${fmtMoney(p)}`;
                       });
                     }
                   } else if (datasetIdx === 2) {
@@ -272,7 +272,7 @@
                     if (list && list.length > 0) {
                       return list.map(o => {
                         const p = o.fill_price || o.limit_price;
-                        return `🔴 Sold ${fmtQty(o.qty)} sh. @ ${fmtMoney(p)}`;
+                        return `🔴 Sold ${fmtQty(o.qty)} @ ${fmtMoney(p)}`;
                       });
                     }
                   }
