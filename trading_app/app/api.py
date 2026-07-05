@@ -338,7 +338,7 @@ class ChatRequest(BaseModel):
 GEMINI_SYSTEM_PROMPT = """You are the AI trading assistant for Beacon Trading.
 Analyze the user's message and determine the appropriate action to take.
 You must respond with a single valid JSON object containing exactly these fields:
-1. "action": one of "balance", "positions", "buy", "sell", "search", "orders_list", "cancel_order", "watchlist_view", "watchlist_add", "watchlist_remove", "deposit", "withdraw", or "none"
+1. "action": one of "balance", "positions", "buy", "sell", "search", "quote", "orders_list", "cancel_order", "watchlist_view", "watchlist_add", "watchlist_remove", "deposit", "withdraw", or "none"
 2. "symbol": the ticker symbol (in uppercase, e.g. "AAPL") if applicable, else null
 3. "qty": the integer quantity to buy/sell, else null
 4. "limit_price": the float limit price if specified, else null
@@ -350,6 +350,7 @@ You must respond with a single valid JSON object containing exactly these fields
 Example mapping:
 - "what is my balance?" -> {"action": "balance", "symbol": null, "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Sure, checking your account balance now..."}
 - "buy 10 AAPL at 150" -> {"action": "buy", "symbol": "AAPL", "qty": 10, "limit_price": 150.0, "query": null, "order_id": null, "amount": null, "response": "Let me place that limit order for you..."}
+- "what is Tesla's stock price?" -> {"action": "quote", "symbol": "TSLA", "qty": null, "limit_price": null, "query": null, "order_id": null, "amount": null, "response": "Getting quote for Tesla..."}
 - "search for Microsoft" -> {"action": "search", "symbol": null, "qty": null, "limit_price": null, "query": "Microsoft", "order_id": null, "amount": null, "response": "Searching catalog for Microsoft..."}
 
 Always return ONLY a raw JSON string. Do not wrap in backticks or markdown codeblocks."""
@@ -491,6 +492,31 @@ def chat_agent(request: Request, body: ChatRequest, account_id: Optional[str] = 
                 for r in results:
                     res += f"* **{r['symbol']}**: {r['name']} ({r['exchange']})\n"
                 return {"response": res}
+
+            # 4b. Quote Check
+            elif action == "quote" and symbol:
+                symbol = symbol.upper()
+                entry = svc.catalog.get(symbol)
+                if not entry:
+                    search_res = svc.catalog.search(symbol, limit=1)
+                    if search_res:
+                        symbol = search_res[0]["symbol"]
+                        entry = svc.catalog.get(symbol)
+                
+                quotes = svc.prices.get_quotes([symbol])
+                q = quotes.get(symbol)
+                if not q:
+                    return {"response": f"Sorry, I couldn't fetch a quote for symbol **'{symbol}'**."}
+                
+                change_sign = "+" if q.change >= 0 else ""
+                return {
+                    "response": (
+                        f"{initial_response}\n\n"
+                        f"📊 **{symbol}** ({q.name or (entry['name'] if entry else symbol)}) Quote:\n"
+                        f"* **Current Price**: ${q.price:,.2f}\n"
+                        f"* **Change Today**: {change_sign}${q.change:,.2f} ({q.change_pct:+.2f}%)"
+                    )
+                }
 
             # 5. Orders List
             elif action == "orders_list":
