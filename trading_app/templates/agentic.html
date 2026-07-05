@@ -25,6 +25,27 @@
     </ul>
   </div>
 
+  <!-- Connection Status Card -->
+  <div class="card doc-card">
+    <h2>Connection Status</h2>
+    <div class="endpoints-list">
+      <div class="endpoint-item">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="status-dot checking" id="status-api-dot"></span>
+          <span class="endpoint-label">Web API Online</span>
+        </div>
+        <code id="status-url">Loading…</code>
+      </div>
+      <div class="endpoint-item">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="status-dot checking" id="status-mcp-dot"></span>
+          <span class="endpoint-label">MCP Server Endpoint</span>
+        </div>
+        <code id="mcp-endpoint-url">Loading…</code>
+      </div>
+    </div>
+  </div>
+
   <!-- Claude Setup Card -->
   <div class="card doc-card">
     <h2>Integrate with Claude (Code / Desktop)</h2>
@@ -165,6 +186,10 @@
       mcpUrl = origin.replace("https://", "https://agent-") + "/mcp";
     }
 
+    // Set connection status URLs
+    document.getElementById("status-url").textContent = origin;
+    document.getElementById("mcp-endpoint-url").textContent = mcpUrl;
+
     // Set copyable command content for Claude
     const cmd = `claude mcp add --scope user --transport http beacon-trading ${mcpUrl}`;
     document.getElementById("cloud-mcp-cmd").textContent = cmd;
@@ -178,6 +203,29 @@
       }
     }, null, 2);
     document.getElementById("antigravity-config-cmd").textContent = jsonConfig;
+
+    // Check status dynamically
+    const apiDot = document.getElementById("status-api-dot");
+    const mcpDot = document.getElementById("status-mcp-dot");
+
+    async function checkStatus(url, element, options = {}) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 3500);
+      try {
+        await fetch(url, { ...options, signal: controller.signal });
+        element.className = "status-dot online";
+        clearTimeout(id);
+      } catch (err) {
+        element.className = "status-dot offline";
+        clearTimeout(id);
+      }
+    }
+
+    // Ping API (using a simple auth status check, which is cheap)
+    checkStatus("/api/account", apiDot, { method: "GET" });
+
+    // Ping MCP SSE endpoint (using no-cors to avoid preflight issues)
+    checkStatus(mcpUrl, mcpDot, { method: "GET", mode: "no-cors", cache: "no-cache" });
   })();
 
   function copyCommand(elemId) {

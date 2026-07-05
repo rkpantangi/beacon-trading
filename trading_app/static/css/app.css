@@ -669,3 +669,25 @@ input:focus, select:focus { border-color: var(--primary); }
   letter-spacing: -0.2px;
 }
 
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: var(--muted);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.status-dot.checking {
+  background-color: var(--warn);
+  box-shadow: 0 0 8px var(--warn);
+}
+.status-dot.online {
+  background-color: var(--gain);
+  box-shadow: 0 0 8px var(--gain);
+}
+.status-dot.offline {
+  background-color: var(--loss);
+  box-shadow: 0 0 8px var(--loss);
+}
+
+
